@@ -151,30 +151,31 @@
     return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
   }
 
-  /* 把浮层夹在视口内。
+  /* 把浮层夹在视口内，并算出小尖角该放哪。
      浮层默认「正对按钮居中」，但窄屏时 .post-head__meta 会换行，三个按钮整组可能
-     贴到屏幕左边或右边，居中就会顶出去（而且复制按钮是最左那个、分享是中间那个，
-     位置还不一样）。这里量一次真实位置，超出去多少就往回推多少，
-     顺便把尖角挪到按钮中心；贴边时尖角夹在浮层内部，免得跑到圆角外面。
+     贴到屏幕左边或右边（复制是最左那个、分享是中间那个），居中就会顶出去。
 
-     注意：调用前必须先加上 .is-show / .is-open，让 transform 处于 scale(1)，
-     量到的才是最终尺寸 —— 否则 0.94 的缩放会让结果差几个像素。 */
+     这里刻意用 offsetWidth（布局宽度，不受 transform 影响）+ 按钮矩形来推算，
+     而不是量浮层自己的 getBoundingClientRect()：后者在「刚加上 .is-show、
+     过渡还没跑完」的那一刻会返回动画起始值（scale .94 那一帧），
+     量出来偏小几像素，尖角就对不准按钮中心了。 */
   function placePop(el, btn) {
     var PAD = 12;    // 浮层离视口边缘至少留这么多
     var EDGE = 14;   // 尖角离浮层两端至少留这么多
 
-    el.style.removeProperty('--pop-shift');
-    el.style.removeProperty('--pop-arrow');
-
+    var w = el.offsetWidth;
     var b = btn.getBoundingClientRect();
-    var r = el.getBoundingClientRect();
-    var shift = 0;
-    if (r.left < PAD) shift = PAD - r.left;
-    else if (r.right > window.innerWidth - PAD) shift = (window.innerWidth - PAD) - r.right;
-    if (shift) el.style.setProperty('--pop-shift', shift.toFixed(1) + 'px');
+    var bc = b.left + b.width / 2;   // 按钮中心
+    var left = bc - w / 2;           // 居中时浮层的左边缘
 
-    var cx = b.left + b.width / 2 - (r.left + shift);
-    cx = Math.max(EDGE, Math.min(r.width - EDGE, cx));
+    var shift = 0;
+    if (left < PAD) shift = PAD - left;
+    else if (left + w > window.innerWidth - PAD) shift = (window.innerWidth - PAD) - (left + w);
+
+    el.style.setProperty('--pop-shift', shift.toFixed(1) + 'px');
+
+    var cx = bc - (left + shift);
+    cx = Math.max(EDGE, Math.min(w - EDGE, cx));
     el.style.setProperty('--pop-arrow', cx.toFixed(1) + 'px');
   }
 
@@ -214,8 +215,13 @@
     var wrap = btn.parentElement;
     var menu = wrap ? wrap.querySelector('.sharemenu') : null;
 
-    function closeMenu() {
+    /* instant = true 时不做淡出，立刻消失。
+       点「复制链接分享」必须用 instant：那张菜单卡片是不透明的，正好压在
+       即将出现的绿色气泡上面，淡出要 0.28s —— 不立刻收掉的话，
+       视觉上就是「菜单关了，但什么反馈都没有」。 */
+    function closeMenu(instant) {
       if (!menu) return;
+      if (instant) menu.classList.add('is-instant');
       menu.classList.remove('is-open');
       btn.setAttribute('aria-expanded', 'false');
     }
@@ -239,6 +245,7 @@
       var willOpen = !menu.classList.contains('is-open');
       closeMenu();
       if (willOpen) {
+        menu.classList.remove('is-instant');   // 恢复正常过渡，这次要淡入
         menu.classList.add('is-open');
         btn.setAttribute('aria-expanded', 'true');
         placePop(menu, btn);
@@ -247,12 +254,12 @@
 
     if (!menu) return;
 
-    // 菜单里的「复制链接分享」
+    // 菜单里的「复制链接分享」：收菜单 + 弹气泡，两者都要有
     var item = menu.querySelector('[data-share-copy]');
     if (item) {
       item.addEventListener('click', function (e) {
         e.stopPropagation();
-        closeMenu();
+        closeMenu(true);
         copyText(location.href, function () { flashDone(btn, baseLabel); });
       });
     }

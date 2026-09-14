@@ -486,6 +486,9 @@
 
 /* ---- 绿色成功气泡 ---- */
 .copytip {
+  /* 必须比 .sharemenu(20) 高：点「复制链接分享」时菜单和气泡会短暂同时存在，
+     层级一样的话菜单（DOM 靠后）会画在气泡上面，把气泡整个盖住 */
+  z-index: 21;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -520,6 +523,8 @@
   background-color: var(--bg-nav);
   border-color: var(--stroke-strong);
 }
+/* 选中菜单项后立刻消失，不走淡出 —— 那张不透明的卡片会正好压住即将出现的绿色气泡 */
+.sharemenu.is-instant { transition: none; }
 .sharemenu__item {
   display: flex;
   align-items: center;
