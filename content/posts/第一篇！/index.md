@@ -4,7 +4,6 @@ draft = false
 title = '第一篇！'
 description = ''分享一些很喜欢的图片
 cover = 'cover.png'            
-# 封面图放在本文章目录里，写文件名即可
 # categories = ['分类名']           # 可选，写了会自动生成分类页
 # tags = ['标签一', '标签二']        # 可选
 +++
