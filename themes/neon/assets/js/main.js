@@ -15,6 +15,44 @@
   var root = doc.documentElement;
   var STORE_KEY = 'neon-theme';
 
+  /* ================= 临时诊断面板（定位完即删） ================= */
+  var DBG = doc.createElement('div');
+  DBG.id = 'neon-dbg';
+  DBG.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;' +
+    'background:rgba(0,0,0,.9);color:#7CFFB2;font:11px/1.45 monospace;' +
+    'padding:6px 8px;white-space:pre-wrap;word-break:break-all;pointer-events:none';
+  var DBG_LINES = [];
+  function dbg(s) {
+    DBG_LINES.push(s);
+    while (DBG_LINES.length > 7) DBG_LINES.shift();
+    DBG.textContent = DBG_LINES.join('\n');
+  }
+  function dbgMount() { if (doc.body && !DBG.parentNode) doc.body.appendChild(DBG); }
+  dbgMount();
+  doc.addEventListener('DOMContentLoaded', dbgMount);
+
+  dbg('UA ' + (navigator.userAgent || '').slice(0, 78));
+  dbg('M=' + isMobile()
+      + ' share=' + (typeof navigator.share)
+      + ' clip=' + (!!navigator.clipboard)
+      + ' wt=' + (navigator.clipboard ? typeof navigator.clipboard.writeText : 'none')
+      + ' sec=' + window.isSecureContext);
+  dbg('W=' + window.innerWidth + ' dpr=' + window.devicePixelRatio);
+
+  doc.addEventListener('click', function (e) {
+    var t = e.target;
+    var cls = '';
+    try { cls = (t.getAttribute('class') || '').split(' ')[0]; } catch (err) { cls = '?'; }
+    var near = '';
+    try {
+      if (t.closest && t.closest('[data-share-copy]')) near = 'SHARE-ITEM';
+      else if (t.closest && t.closest('[data-share]')) near = 'SHARE-BTN';
+      else if (t.closest && t.closest('[data-copy-link]')) near = 'COPY-BTN';
+    } catch (err) { near = 'CLOSEST-ERR'; }
+    dbg('CLICK <' + t.tagName + '> .' + cls + ' ' + near);
+  }, true);
+  /* ============================================================ */
+
   /* ---------------------------------------------------------------- 主题 */
   function currentTheme() {
     return root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
@@ -207,8 +245,19 @@
     if (tip) {
       tip.classList.add('is-show');
       placePop(tip, btn);
+      var cs = window.getComputedStyle(tip);
+      var r = tip.getBoundingClientRect();
+      dbg('  FLASH show=' + tip.classList.contains('is-show')
+          + ' op=' + cs.opacity + ' vis=' + cs.visibility
+          + ' disp=' + cs.display + ' z=' + cs.zIndex);
+      dbg('  box=' + tip.offsetWidth + 'x' + tip.offsetHeight
+          + ' rect=' + Math.round(r.left) + ',' + Math.round(r.top)
+          + ' shift=' + tip.style.getPropertyValue('--pop-shift')
+          + ' arrow=' + tip.style.getPropertyValue('--pop-arrow'));
       clearTimeout(btn._tipTimer);
       btn._tipTimer = setTimeout(function () { tip.classList.remove('is-show'); }, HOLD);
+    } else {
+      dbg('  FLASH tip=NULL  (wrap=' + (wrap ? wrap.className : 'null') + ')');
     }
     clearTimeout(btn._doneTimer);
     btn._doneTimer = setTimeout(function () {
@@ -220,6 +269,7 @@
   doc.querySelectorAll('[data-copy-link]').forEach(function (btn) {
     var baseLabel = btn.getAttribute('aria-label') || '复制本文链接';
     btn.addEventListener('click', function () {
+      dbg('> COPY-BTN handler');
       copyText(location.href);
       flashDone(btn, baseLabel);   // 反馈同步出现，不等复制结果
     });
@@ -243,6 +293,7 @@
 
     btn.addEventListener('click', function (e) {
       e.stopPropagation();   // 别让下面「点别处收起」那个监听当场把它关掉
+      dbg('> SHARE-BTN handler  share=' + (typeof navigator.share) + ' menu=' + (!!menu));
 
       // 手机：系统分享面板（微信 / QQ / Telegram / 复制链接都在里面），
       // 面板本身就是反馈，不再弹气泡；用户取消会 reject，忽略即可。
@@ -274,6 +325,7 @@
     var item = menu.querySelector('[data-share-copy]');
     if (item) {
       item.addEventListener('click', function (e) {
+        dbg('> SHARE-ITEM handler');
         e.stopPropagation();
         closeMenu(true);
         copyText(location.href);
