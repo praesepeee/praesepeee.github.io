@@ -432,18 +432,60 @@
 }
 .post-actions { display: flex; gap: 8px; }
 
-/* ---------- 复制链接成功提示 ----------
-   点一下「复制」按钮，从它正下方浮出一枚绿色小气泡（对钩 + 已复制链接）。
-   结构见 layouts/_default/single.html：.copywrap 包住按钮，.copytip 是气泡。
-   显隐由 assets/js/main.js 加/去 .is-show 控制。
-   气泡用「不透明底色 + 绿色薄罩」而不是纯半透明，否则小尖角会透出父级边框，出现接缝。 */
+/* ---------- 文章头部按钮的下拉浮层 ----------
+   两类浮层都挂在 .copywrap 里，从按钮正下方浮出：
+     .copytip    绿色小气泡「✓ 已复制链接」—— 点复制按钮、或点分享菜单里的复制项后出现
+     .sharemenu  桌面端点「分享」弹出的小菜单（里面只有一个「复制链接分享」）
+   显隐由 assets/js/main.js 加/去 .is-show / .is-open 控制。
+
+   定位靠两个 CSS 变量，由 JS 的 placePop() 算出来：
+     --pop-shift  浮层贴到视口边缘时往里推多少 px（默认 0，即正对按钮居中）
+     --pop-arrow  小尖角相对浮层左边缘的位置（默认 50%）
+   为什么要 JS 量一次再夹：窄屏时 .post-head__meta 会换行，三个按钮整组可能被挤到屏幕左边，
+   而「分享」是中间那个、「复制」是最左那个 —— 不管写死左对齐还是右对齐，
+   总有一种排布会顶出屏幕。只有量出真实位置再夹，两种排布才都稳。 */
 .copywrap { position: relative; display: inline-flex; }
 
-.copytip {
+.copytip,
+.sharemenu {
   position: absolute;
   top: calc(100% + 12px);
   left: 50%;
   z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(calc(-50% + var(--pop-shift, 0px)), -8px) scale(.94);
+  transform-origin: var(--pop-arrow, 50%) 0;  /* 缩放锚在尖角上，动画才不会飘 */
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease),
+              visibility 0s linear var(--dur);
+}
+.copytip.is-show,
+.sharemenu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(calc(-50% + var(--pop-shift, 0px)), 0) scale(1);
+  transition-delay: 0s;
+}
+
+/* 小尖角：旋转 45° 的正方形，压在浮层上边框上把它盖住。
+   底色用不透明色 —— 纯半透明会让父级那条边框透出来，出现接缝。 */
+.copytip::before,
+.sharemenu::before {
+  content: "";
+  position: absolute;
+  left: var(--pop-arrow, 50%);
+  bottom: 100%;
+  width: 7px; height: 7px;
+  margin-left: -3.5px;
+  margin-bottom: -3px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+  border-top-left-radius: 2px;
+  transform: rotate(45deg);
+}
+
+/* ---- 绿色成功气泡 ---- */
+.copytip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -457,63 +499,49 @@
   line-height: 1;
   white-space: nowrap;
   box-shadow: 0 12px 26px -14px var(--ok-glow);
-  opacity: 0;
-  visibility: hidden;
-  transform: translate(-50%, -8px) scale(.94);
-  transform-origin: 50% 0;
-  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease),
-              visibility 0s linear var(--dur);
-  pointer-events: none;
-}
-.copytip.is-show {
-  opacity: 1;
-  visibility: visible;
-  transform: translate(-50%, 0) scale(1);
-  transition-delay: 0s;
+  pointer-events: none;   /* 气泡只是提示，不挡点击 */
 }
 .copytip svg { width: 14px; height: 14px; color: var(--ok); flex-shrink: 0; }
-
-/* 小尖角，指回上面的按钮（旋转 45° 的正方形，压在气泡上边框上把它盖住） */
 .copytip::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  width: 7px; height: 7px;
-  margin-left: -4px;
-  margin-bottom: -3px;
   background-color: var(--bg-nav);
   background-image: linear-gradient(var(--ok-wash), var(--ok-wash));
-  border-top: 1px solid var(--ok-stroke);
-  border-left: 1px solid var(--ok-stroke);
-  border-top-left-radius: 2px;
-  transform: rotate(45deg);
+  border-color: var(--ok-stroke);
 }
+
+/* ---- 分享菜单（桌面端）---- */
+.sharemenu {
+  padding: 6px;
+  border-radius: var(--r-sm);
+  background-color: var(--bg-nav);
+  border: 1px solid var(--stroke-strong);
+  box-shadow: var(--shadow-card);
+}
+.sharemenu::before {
+  background-color: var(--bg-nav);
+  border-color: var(--stroke-strong);
+}
+.sharemenu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--r-xs);
+  font-size: var(--fs-2xs);
+  line-height: 1;
+  color: var(--text-2);
+  white-space: nowrap;
+  transition: color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+.sharemenu__item svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+.sharemenu__item:hover { color: var(--accent-text); background: var(--accent-wash-2); }
+.sharemenu__item:hover svg { color: var(--accent); }
 
 /* 按钮本身也切成绿色，跟气泡呼应 */
 .iconbtn.is-done {
   color: var(--ok);
   border-color: var(--ok-stroke);
   background: var(--ok-wash);
-}
-
-/* 窄屏（≤960px 时左右留白只剩 24px）：气泡改成「左边缘对齐按钮，向右展开」。
-   注意不能右对齐 —— 窄屏时 .post-head__meta 会换行，三个按钮整组被挤到左边
-   （space-between 在「一行只有一个元素」时等同于 flex-start），而复制按钮是这组里最左边的一个，
-   右对齐会让气泡往左展 104px，直接顶出屏幕左侧（安卓上实测就是这样）。
-   左对齐则两种排布都安全：
-     · 换行、按钮组在左 → 气泡从按钮左边缘往右展，右边还有大把空间
-     · 没换行、按钮组在右 → 按钮左边缘距离容器右边 124px，气泡往右展 104px 也还在里面 */
-@media (max-width: 960px) {
-  .copytip {
-    left: 0;
-    right: auto;
-    transform: translate(0, -8px) scale(.94);
-    transform-origin: 18px 0;   /* 缩放锚在小尖角上，动画才不会飘 */
-  }
-  .copytip.is-show { transform: translate(0, 0) scale(1); }
-  /* 尖角对准按钮中心：按钮 36px 宽，中心在 18px 处 */
-  .copytip::before { left: 14px; right: auto; margin-left: 0; }
 }
 
 .breadcrumb { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

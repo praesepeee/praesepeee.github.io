@@ -52,16 +52,22 @@
         </p>
 
         {{- /* 文章头部按钮：复制本文链接 / 分享 / 订阅 RSS，三个都在。
-               复制、分享点击后都会在按钮正下方浮出绿色气泡（样式见 components.css）；
-               分享优先调系统分享面板（手机端），桌面端没有 navigator.share 时退回复制链接。 */ -}}
+               两个浮层的样式在 components.css，交互在 assets/js/main.js：
+                 · 复制按钮 → 下方浮出绿色气泡「✓ 已复制链接」
+                 · 分享按钮 → 手机走系统分享面板；Windows / Mac 弹 .sharemenu 小菜单
+                   （桌面刻意不碰 navigator.share：Windows 版 Chrome 那套系统共享面板
+                    经常直接报「无法显示所有共享方法」，见 main.js 里的说明） */ -}}
         <div class="post-actions">
           <span class="copywrap">
             <button class="iconbtn iconbtn--mini" type="button" data-copy-link aria-label="复制本文链接">{{ partial "icon.html" "link" }}</button>
             <span class="copytip" aria-hidden="true">{{ partial "icon.html" "check-circle" }}已复制链接</span>
           </span>
           <span class="copywrap">
-            <button class="iconbtn iconbtn--mini" type="button" data-share aria-label="分享本文">{{ partial "icon.html" "share" }}</button>
+            <button class="iconbtn iconbtn--mini" type="button" data-share aria-label="分享本文" aria-haspopup="menu" aria-expanded="false">{{ partial "icon.html" "share" }}</button>
             <span class="copytip" aria-hidden="true">{{ partial "icon.html" "check-circle" }}已复制链接</span>
+            <span class="sharemenu" role="menu">
+              <button class="sharemenu__item" type="button" role="menuitem" data-share-copy>{{ partial "icon.html" "link" }}复制链接分享</button>
+            </span>
           </span>
           {{- with site.Home.OutputFormats.Get "rss" }}
           <a class="iconbtn iconbtn--mini" href="{{ .Permalink }}" aria-label="订阅 RSS">{{ partial "icon.html" "rss" }}</a>
