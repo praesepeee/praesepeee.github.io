@@ -333,6 +333,13 @@
         var mx = Math.round(mr.left + mr.width / 2);
         var my = Math.round(mr.top + mr.height / 2);
         dbg('efp(' + mx + ',' + my + ')=' + efp(mx, my));
+        // 再量一次：区分「命中测试还没刷新」和「根本不可命中」
+        setTimeout(function () {
+          var r2 = menu.getBoundingClientRect();
+          var x2 = Math.round(r2.left + r2.width / 2);
+          var y2 = Math.round(r2.top + r2.height / 2);
+          dbg('efp@150ms(' + x2 + ',' + y2 + ')=' + efp(x2, y2));
+        }, 150);
       }
     });
 
@@ -340,17 +347,41 @@
 
     // 菜单里的「复制链接分享」：收菜单 + 弹气泡，两者都要有
     var item = menu.querySelector('[data-share-copy]');
+
+    function shareCopy() {
+      closeMenu(true);
+      copyText(location.href);
+      flashDone(btn, baseLabel);   // 和复制按钮一样，反馈同步出现
+    }
+
     if (item) {
       item.addEventListener('click', function (e) {
         dbg('ITEM-H');
         e.stopPropagation();
-        closeMenu(true);
-        copyText(location.href);
-        flashDone(btn, baseLabel);   // 和复制按钮一样，反馈同步出现
+        shareCopy();
       });
     }
 
-    // 点别处 / 按 Esc 收起
+    /* 坐标兜底：部分安卓 WebView（已确认 Via）的命中测试不认这个浮层 ——
+       菜单被正常画出来（有尺寸、visibility:visible、rect 也对），但
+       elementFromPoint 在菜单正中心返回的却是页面容器 <div class="layout">，
+       于是手指落在菜单项上时事件目标根本不是它，菜单项自己的监听收不到。
+
+       所以这里再按「手指坐标是否落在菜单项矩形内」判一次。
+       两条路互斥：菜单项能正常收到点击时会 stopPropagation，兜底不会触发。 */
+    if (item) {
+      doc.addEventListener('click', function (e) {
+        if (!menu.classList.contains('is-open')) return;
+        var r = item.getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        if (e.clientX < r.left || e.clientX > r.right) return;
+        if (e.clientY < r.top || e.clientY > r.bottom) return;
+        dbg('ITEM-H by-rect');
+        shareCopy();
+      });
+    }
+
+    // 点别处 / 按 Esc 收起（必须排在坐标兜底之后注册，否则会抢先收起菜单）
     doc.addEventListener('click', closeMenu);
     doc.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' || e.keyCode === 27) closeMenu();

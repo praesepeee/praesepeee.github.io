@@ -530,6 +530,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-height: 38px;          /* 手机上给足触摸目标，别让人点在边缘上 */
   padding: 8px 12px;
   border-radius: var(--r-xs);
   font-size: var(--fs-2xs);
