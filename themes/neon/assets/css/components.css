@@ -497,11 +497,23 @@
   background: var(--ok-wash);
 }
 
-/* 窄屏（≤960px 时左右留白只剩 24px）：气泡改右对齐，避免顶出屏幕右边被 body 的 overflow-x 裁掉 */
+/* 窄屏（≤960px 时左右留白只剩 24px）：气泡改成「左边缘对齐按钮，向右展开」。
+   注意不能右对齐 —— 窄屏时 .post-head__meta 会换行，三个按钮整组被挤到左边
+   （space-between 在「一行只有一个元素」时等同于 flex-start），而复制按钮是这组里最左边的一个，
+   右对齐会让气泡往左展 104px，直接顶出屏幕左侧（安卓上实测就是这样）。
+   左对齐则两种排布都安全：
+     · 换行、按钮组在左 → 气泡从按钮左边缘往右展，右边还有大把空间
+     · 没换行、按钮组在右 → 按钮左边缘距离容器右边 124px，气泡往右展 104px 也还在里面 */
 @media (max-width: 960px) {
-  .copytip { left: auto; right: 0; transform: translate(0, -8px) scale(.94); }
+  .copytip {
+    left: 0;
+    right: auto;
+    transform: translate(0, -8px) scale(.94);
+    transform-origin: 18px 0;   /* 缩放锚在小尖角上，动画才不会飘 */
+  }
   .copytip.is-show { transform: translate(0, 0) scale(1); }
-  .copytip::before { left: auto; right: 14px; margin-left: 0; }
+  /* 尖角对准按钮中心：按钮 36px 宽，中心在 18px 处 */
+  .copytip::before { left: 14px; right: auto; margin-left: 0; }
 }
 
 .breadcrumb { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
