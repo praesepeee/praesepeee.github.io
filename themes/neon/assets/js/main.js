@@ -4,7 +4,8 @@
    2) 移动端菜单开合
    3) 目录滚动高亮（IntersectionObserver）
    4) 代码块一键复制
-   5) 滚动进入动画
+   5) 复制本文链接 / 分享（成功后按钮切绿 + 正下方浮出气泡）
+   6) 滚动进入动画
    无依赖，压缩后约 3KB。
    ========================================================================== */
 (function () {
@@ -119,9 +120,7 @@
     pre.appendChild(btn);
   });
 
-  /* -------------------------------------------------------- 复制本文链接 */
-  /* 说明：原先还有一段 [data-share]「分享」逻辑，随文章头部分享按钮一起删除（2026-09-14）。
-     copyText() 保留 —— [data-copy-link] 仍在使用。 */
+  /* --------------------------------------------- 复制链接 / 分享 / 气泡提示 */
   function copyText(text, onDone) {
     var fallback = function () {
       var ta = doc.createElement('textarea');
@@ -141,25 +140,46 @@
     fallback();
   }
 
-  doc.querySelectorAll('[data-copy-link]').forEach(function (btn) {
-    var tip = btn.parentElement && btn.parentElement.querySelector('.copytip');
-    var timer = null;
+  /* 统一的成功反馈：按钮切绿 + 正下方浮出绿色气泡，HOLD 毫秒后自动收起。
+     气泡是 .copywrap 里的 .copytip（模板 single.html 里写死的），
+     这里只管加/去 .is-show；连点会重置计时，不会闪。 */
+  function flashDone(btn, baseLabel) {
     var HOLD = 1800;
+    var wrap = btn.parentElement;
+    var tip = wrap ? wrap.querySelector('.copytip') : null;
+
+    btn.setAttribute('aria-label', '已复制链接');
+    btn.classList.add('is-done');
+
+    if (tip) {
+      tip.classList.add('is-show');
+      clearTimeout(btn._tipTimer);
+      btn._tipTimer = setTimeout(function () { tip.classList.remove('is-show'); }, HOLD);
+    }
+    clearTimeout(btn._doneTimer);
+    btn._doneTimer = setTimeout(function () {
+      btn.setAttribute('aria-label', baseLabel);
+      btn.classList.remove('is-done');
+    }, HOLD);
+  }
+
+  doc.querySelectorAll('[data-copy-link]').forEach(function (btn) {
+    var baseLabel = btn.getAttribute('aria-label') || '复制本文链接';
     btn.addEventListener('click', function () {
-      copyText(location.href, function () {
-        var old = btn.getAttribute('aria-label');
-        btn.setAttribute('aria-label', '已复制链接');
-        btn.classList.add('is-done');
-        if (tip) {
-          tip.classList.add('is-show');
-          clearTimeout(timer);
-          timer = setTimeout(function () { tip.classList.remove('is-show'); }, HOLD);
-        }
-        setTimeout(function () {
-          btn.setAttribute('aria-label', old || '复制本文链接');
-          btn.classList.remove('is-done');
-        }, HOLD);
-      });
+      copyText(location.href, function () { flashDone(btn, baseLabel); });
+    });
+  });
+
+  doc.querySelectorAll('[data-share]').forEach(function (btn) {
+    var baseLabel = btn.getAttribute('aria-label') || '分享本文';
+    btn.addEventListener('click', function () {
+      if (navigator.share) {
+        // 手机端：系统分享面板本身就是反馈，不用再弹气泡；用户取消也不报错
+        navigator.share({ title: doc.title, url: location.href }).catch(function () {});
+        return;
+      }
+      // 桌面端没有 navigator.share，退回复制链接，给和复制按钮一样的气泡反馈
+      copyText(location.href, function () { flashDone(btn, baseLabel); });
     });
   });
 
