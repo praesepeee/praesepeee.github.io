@@ -4,7 +4,8 @@
    2) 移动端菜单开合
    3) 目录滚动高亮（IntersectionObserver）
    4) 代码块一键复制
-   5) 复制本文链接 / 分享（手机走系统分享，桌面弹自定义菜单；浮层定位由 placePop 夹在视口内）
+   5) 复制本文链接 / 分享（手机走系统分享，桌面弹自定义菜单；浮层定位由 placePop 夹在视口内；
+      菜单项的点击另有「按坐标判定」的兜底，见下方 shareCopy 附近注释）
    6) 滚动进入动画
    无依赖，压缩后约 3KB。
    ========================================================================== */
@@ -14,58 +15,6 @@
   var doc = document;
   var root = doc.documentElement;
   var STORE_KEY = 'neon-theme';
-
-  /* ================= 临时诊断面板（定位完即删） ================= */
-  var DBG = doc.createElement('div');
-  DBG.id = 'neon-dbg';
-  DBG.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;' +
-    'background:rgba(0,0,0,.92);color:#7CFFB2;font:10px/1.35 monospace;' +
-    'padding:4px 6px;white-space:pre-wrap;word-break:break-all;pointer-events:none';
-  var DBG_LINES = [];
-  function dbg(s) {
-    DBG_LINES.push(s);
-    while (DBG_LINES.length > 12) DBG_LINES.shift();
-    DBG.textContent = DBG_LINES.join('\n');
-  }
-  function dbgMount() { if (doc.body && !DBG.parentNode) doc.body.appendChild(DBG); }
-  dbgMount();
-  doc.addEventListener('DOMContentLoaded', dbgMount);
-
-  function tag(el) {
-    if (!el) return 'null';
-    var c = '';
-    try { c = (el.getAttribute('class') || '').split(' ')[0]; } catch (e) {}
-    return el.tagName + (c ? '.' + c : '');
-  }
-  function rr(el) {
-    if (!el) return 'none';
-    var r = el.getBoundingClientRect();
-    return Math.round(r.left) + ',' + Math.round(r.top) + ' ' +
-           Math.round(r.width) + 'x' + Math.round(r.height);
-  }
-  function efp(x, y) {
-    try { return tag(doc.elementFromPoint(x, y)); } catch (e) { return 'ERR'; }
-  }
-  function cs(el, p) {
-    try { return window.getComputedStyle(el)[p]; } catch (e) { return 'ERR'; }
-  }
-
-  dbg('M=' + isMobile() + ' share=' + (typeof navigator.share)
-      + ' wt=' + (navigator.clipboard ? typeof navigator.clipboard.writeText : 'none')
-      + ' sec=' + window.isSecureContext + ' W=' + window.innerWidth);
-  dbg('UA ' + (navigator.userAgent || '').slice(0, 96));
-
-  doc.addEventListener('click', function (e) {
-    var t = e.target, near = '';
-    try {
-      if (t.closest && t.closest('[data-share-copy]')) near = 'ITEM';
-      else if (t.closest && t.closest('[data-share]')) near = 'SBTN';
-      else if (t.closest && t.closest('[data-copy-link]')) near = 'CBTN';
-    } catch (err) {}
-    dbg('CLK ' + tag(t) + ' ' + near + ' @' + Math.round(e.clientX) + ',' + Math.round(e.clientY)
-        + ' efp=' + efp(e.clientX, e.clientY));
-  }, true);
-  /* ============================================================ */
 
   /* ---------------------------------------------------------------- 主题 */
   function currentTheme() {
@@ -259,13 +208,8 @@
     if (tip) {
       tip.classList.add('is-show');
       placePop(tip, btn);
-      var tcs = window.getComputedStyle(tip);
-      dbg('FLASH op=' + tcs.opacity + ' vis=' + tcs.visibility + ' z=' + tcs.zIndex);
-      dbg('  tip=' + rr(tip) + ' sh=' + tip.style.getPropertyValue('--pop-shift'));
       clearTimeout(btn._tipTimer);
       btn._tipTimer = setTimeout(function () { tip.classList.remove('is-show'); }, HOLD);
-    } else {
-      dbg('FLASH tip=NULL wrap=' + tag(wrap));
     }
     clearTimeout(btn._doneTimer);
     btn._doneTimer = setTimeout(function () {
@@ -277,7 +221,6 @@
   doc.querySelectorAll('[data-copy-link]').forEach(function (btn) {
     var baseLabel = btn.getAttribute('aria-label') || '复制本文链接';
     btn.addEventListener('click', function () {
-      dbg('CBTN-H');
       copyText(location.href);
       flashDone(btn, baseLabel);   // 反馈同步出现，不等复制结果
     });
@@ -301,7 +244,6 @@
 
     btn.addEventListener('click', function (e) {
       e.stopPropagation();   // 别让下面「点别处收起」那个监听当场把它关掉
-      dbg('SBTN-H menu=' + (!!menu));
 
       // 手机：系统分享面板（微信 / QQ / Telegram / 复制链接都在里面），
       // 面板本身就是反馈，不再弹气泡；用户取消会 reject，忽略即可。
@@ -324,22 +266,6 @@
         menu.classList.add('is-open');
         btn.setAttribute('aria-expanded', 'true');
         placePop(menu, btn);
-
-        // 探针：菜单的真实坐标、包含块、以及该坐标上最顶层的元素是谁
-        var mr = menu.getBoundingClientRect();
-        dbg('wrap.pos=' + cs(wrap, 'position') + ' m.pos=' + cs(menu, 'position')
-            + ' OP=' + tag(menu.offsetParent));
-        dbg('m=' + rr(menu) + ' i=' + rr(item) + ' vis=' + cs(menu, 'visibility'));
-        var mx = Math.round(mr.left + mr.width / 2);
-        var my = Math.round(mr.top + mr.height / 2);
-        dbg('efp(' + mx + ',' + my + ')=' + efp(mx, my));
-        // 再量一次：区分「命中测试还没刷新」和「根本不可命中」
-        setTimeout(function () {
-          var r2 = menu.getBoundingClientRect();
-          var x2 = Math.round(r2.left + r2.width / 2);
-          var y2 = Math.round(r2.top + r2.height / 2);
-          dbg('efp@150ms(' + x2 + ',' + y2 + ')=' + efp(x2, y2));
-        }, 150);
       }
     });
 
@@ -356,7 +282,6 @@
 
     if (item) {
       item.addEventListener('click', function (e) {
-        dbg('ITEM-H');
         e.stopPropagation();
         shareCopy();
       });
@@ -376,7 +301,6 @@
         if (!r.width || !r.height) return;
         if (e.clientX < r.left || e.clientX > r.right) return;
         if (e.clientY < r.top || e.clientY > r.bottom) return;
-        dbg('ITEM-H by-rect');
         shareCopy();
       });
     }
