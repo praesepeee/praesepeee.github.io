@@ -87,6 +87,10 @@
   }
 
   /* ------------------------------------------------------------ 代码复制 */
+  /* 注意：这里用的是下面「复制链接」那节里的 copyText()（函数声明会提升，
+     所以先写在这也没关系）。它内部已经把 navigator.clipboard.writeText 可能
+     同步抛异常的情况兜住了 —— 原来这里直接调 writeText，同样的坑，
+     在部分安卓 WebView 上点了没反应。 */
   doc.querySelectorAll('.prose pre').forEach(function (pre) {
     if (pre.querySelector('.copy-btn')) return;
     var btn = doc.createElement('button');
@@ -95,49 +99,59 @@
     btn.textContent = 'COPY';
     btn.addEventListener('click', function () {
       var code = pre.querySelector('code');
-      var text = code ? code.innerText : pre.innerText;
-      var done = function () {
-        btn.textContent = 'COPIED';
-        btn.classList.add('is-done');
-        setTimeout(function () {
-          btn.textContent = 'COPY';
-          btn.classList.remove('is-done');
-        }, 1600);
-      };
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(done, function () { /* 忽略 */ });
-      } else {
-        var ta = doc.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        doc.body.appendChild(ta);
-        ta.select();
-        try { doc.execCommand('copy'); done(); } catch (e) { /* 忽略 */ }
-        doc.body.removeChild(ta);
-      }
+      copyText(code ? code.innerText : pre.innerText);
+      btn.textContent = 'COPIED';
+      btn.classList.add('is-done');
+      setTimeout(function () {
+        btn.textContent = 'COPY';
+        btn.classList.remove('is-done');
+      }, 1600);
     });
     pre.appendChild(btn);
   });
 
   /* ---------------------------------------- 复制链接 / 分享 / 下拉浮层 */
-  function copyText(text, onDone) {
-    var fallback = function () {
-      var ta = doc.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      doc.body.appendChild(ta);
-      ta.select();
-      try { doc.execCommand('copy'); onDone(); } catch (e) {}
-      doc.body.removeChild(ta);
+
+  /* 尽力把 text 写进剪贴板。**不返回结果、不接回调** —— 界面反馈由调用方同步触发，
+     绝不能依赖这里的异步结果。这么设计是因为踩过一个只有真机才复现的坑：
+
+       某些安卓 WebView 里 navigator.clipboard 存在，但 writeText 是 undefined。
+       原来写成 navigator.clipboard.writeText(text).then(onDone, fallback)，
+       这一行会**同步抛 TypeError**，异常冒泡出 copyText、再冒泡出点击处理函数，
+       后面的 flashDone() 根本没执行 —— 现象就是「菜单关了，气泡不出现」，
+       而且控制台之外看不出任何异常。桌面 Chrome 有 writeText，所以只有手机中招。
+
+     同类失败模式还有两种，都靠下面的结构兜住：
+       · writeText() 返回的 promise 永不 settle → 没人等它，无所谓
+       · writeText() reject → 走 legacy()；legacy 里 execCommand 再抛也不影响反馈 */
+  function copyText(text) {
+    var legacy = function () {
+      try {
+        var ta = doc.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');   // 免得手机上弹出软键盘
+        ta.style.position = 'fixed';
+        ta.style.top = '0';                // 固定在视口顶部，select() 不会把页面滚跑
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        doc.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        doc.execCommand('copy');
+        doc.body.removeChild(ta);
+      } catch (e) { /* 复制失败就算了，界面反馈不能受它影响 */ }
     };
-    if (navigator.clipboard && window.isSecureContext) {
-      // 新版接口被拒（权限 / 非 HTTPS 等）时退回老办法，别让提示不出现
-      navigator.clipboard.writeText(text).then(onDone, fallback);
-      return;
-    }
-    fallback();
+
+    try {
+      // 三个条件都要查：clipboard 存在、writeText 真的是函数、且在安全上下文里
+      if (navigator.clipboard &&
+          typeof navigator.clipboard.writeText === 'function' &&
+          window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(null, legacy);
+        return;
+      }
+    } catch (e) { /* 走到下面的老办法 */ }
+    legacy();
   }
 
   /* 手机还是桌面？
@@ -206,7 +220,8 @@
   doc.querySelectorAll('[data-copy-link]').forEach(function (btn) {
     var baseLabel = btn.getAttribute('aria-label') || '复制本文链接';
     btn.addEventListener('click', function () {
-      copyText(location.href, function () { flashDone(btn, baseLabel); });
+      copyText(location.href);
+      flashDone(btn, baseLabel);   // 反馈同步出现，不等复制结果
     });
   });
 
@@ -239,7 +254,8 @@
       // 桌面（Windows / Mac）：自己弹一个小菜单。
       // 桌面刻意不调 navigator.share —— Windows 那套共享面板基本是坏的。
       if (!menu) {
-        copyText(location.href, function () { flashDone(btn, baseLabel); });
+        copyText(location.href);
+        flashDone(btn, baseLabel);
         return;
       }
       var willOpen = !menu.classList.contains('is-open');
@@ -260,7 +276,8 @@
       item.addEventListener('click', function (e) {
         e.stopPropagation();
         closeMenu(true);
-        copyText(location.href, function () { flashDone(btn, baseLabel); });
+        copyText(location.href);
+        flashDone(btn, baseLabel);   // 和复制按钮一样，反馈同步出现
       });
     }
 
