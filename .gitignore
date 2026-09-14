@@ -1,0 +1,66 @@
+# ==========================================================================
+# 选择性同步策略
+#
+#   进 GitHub（换电脑 / 用手机写博客都靠这些保持一致）：
+#     content/  themes/  hugo.toml  archetypes/  .github/
+#     .obsidian/ 里「写博客有用」的那部分配置（见下）
+#
+#   不进（构建产物 / 缓存 / 个人状态 / 可能含密钥）：
+#     public/  resources/  .obsidian/workspace*.json  .obsidian/hotkeys.json 等
+# ==========================================================================
+
+# ---------------------------------------------------------- 构建产物与缓存
+# public/ 由 CI（GitHub Actions）用 `hugo --minify` 现场构建并部署，
+# 不需要进仓库；不跟踪它还能让手机端的同步体积小很多
+public/
+resources/
+.hugo_build.lock
+# CI 转码缓存（.github/scripts/transcode-videos.sh 的产物，只在 Actions 里存在）
+.cache/
+
+# ---------------------------------------------------------- Obsidian 配置（选择性）
+# 【同步】app.json（附件位置、排除目录、Markdown 链接）、appearance.json、
+#         core-plugins.json、community-plugins.json、插件本体 —— 这些决定「体验一致」
+# 【忽略】下面是每台设备自己的状态，同步只会互相打架。
+#         加 **/ 前缀让规则在任意层级都生效，避免出现重复的配置目录时漏网
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+**/.obsidian/hotkeys.json
+**/.obsidian/graph.json
+**/.obsidian/cache/
+**/.obsidian/.trash/
+
+# 插件设置默认**随仓库同步** —— 否则换设备 / 手机端要重新配一遍，
+# 就失去了「体验一致」的意义（Templater 的模板路径、附件路由规则都在这里）
+#
+# 例外：已知会保存凭据的插件，单独忽略。GitHub Token 存在 obsidian-git 的 data.json 里
+**/.obsidian/plugins/obsidian-git/data.json
+# 装了新插件后，先看一眼它的 data.json 有没有 token / API key，有就照上面再加一条
+**/.obsidian/plugins/*/cache/
+
+# Obsidian 自带的回收站
+.trash/
+
+# 历史遗留：vault 原先在 content/posts/，现已移到仓库根。
+# 只要旧的 vault 还被 Obsidian 打开着，它就会在这里重新生成配置目录 —— 整块忽略
+content/posts/.obsidian/
+
+# ---------------------------------------------------------- 待清理：被进程占用无法删除的残留
+# 测试视频/ 下有一枚转码残留 mp4 被某进程占用（文件锁），暂时删不掉；
+# 其 tracked 文件已随本仓库的删除提交一并移除，本地残留文件用本规则忽略，
+# 避免以后 `git add .` 把它误提交进版本库（部署站点不受影响，CI 构建也不会包含它）
+content/posts/测试视频/
+
+# ---------------------------------------------------------- 本机 / 个人
+# 本机工作目录（Agent 记忆、配置），不纳入版本管理
+.workbuddy/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------- 临时文件
+*.tmp
+*.bak
+*.log
+*.swp
+*~

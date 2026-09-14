@@ -1,0 +1,43 @@
+{{- /* =========================================================================
+   Neon Theme · 分页导航（数字胶囊 + 下一页）
+   用法：{{ partial "pagination.html" . }}
+   ========================================================================= */ -}}
+{{- $pg := .Paginator -}}
+{{- if gt $pg.TotalPages 1 }}
+<nav class="pager" aria-label="分页导航">
+  {{- $cur := $pg.PageNumber -}}
+  {{- $total := $pg.TotalPages -}}
+  {{- $start := 1 -}}
+  {{- $end := $total -}}
+  {{- if gt $total 7 -}}
+    {{- $start = sub $cur 2 -}}
+    {{- if lt $start 1 }}{{ $start = 1 }}{{ end -}}
+    {{- $end = add $start 4 -}}
+    {{- if gt $end $total -}}
+      {{- $end = $total -}}
+      {{- $start = sub $end 4 -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- if gt $start 1 }}
+    <a class="pager__num" href="{{ (index $pg.Pagers 0).URL }}">1</a>
+    {{- if gt $start 2 }}<span class="pager__gap">···</span>{{ end }}
+  {{- end }}
+
+  {{- range $i, $p := $pg.Pagers }}
+    {{- $n := add $i 1 -}}
+    {{- if and (ge $n $start) (le $n $end) }}
+    <a class="pager__num{{ if eq $n $cur }} is-current{{ end }}" href="{{ $p.URL }}"{{ if eq $n $cur }} aria-current="page"{{ end }}>{{ $n }}</a>
+    {{- end }}
+  {{- end }}
+
+  {{- if lt $end $total }}
+    {{- if lt $end (sub $total 1) }}<span class="pager__gap">···</span>{{ end }}
+    <a class="pager__num" href="{{ (index $pg.Pagers (sub $total 1)).URL }}">{{ $total }}</a>
+  {{- end }}
+
+  {{- if $pg.HasNext }}
+  <a class="pager__next" href="{{ $pg.Next.URL }}">下一页 {{ partial "icon.html" "chevron-right" }}</a>
+  {{- end }}
+</nav>
+{{- end }}

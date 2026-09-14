@@ -1,0 +1,42 @@
+{{- /* =========================================================================
+   Neon Theme · 文章列表条目
+   用法：{{ partial "post-card.html" (dict "page" . "i" $index) }}
+   ========================================================================= */ -}}
+{{- $p := .page -}}
+{{- $i := .i | default 0 -}}
+{{- $cover := partial "img-url.html" (dict "page" $p "src" $p.Params.cover) -}}
+{{- $imgs := $p.Params.images -}}
+{{- if and (not $cover) $imgs (reflect.IsSlice $imgs) -}}
+  {{- $cover = partial "img-url.html" (dict "page" $p "src" (index $imgs 0)) -}}
+{{- end -}}
+{{- /* 分类标签：没写 categories 就回退「随笔」，不要露出 posts 这个分区名 */ -}}
+
+<article class="post-item reveal">
+  <div class="post-item__inner">
+    <div class="post-item__meta">
+      {{- /* 显示到分钟：日期不对时一眼能看出来（排序完全按 front matter 的 date） */ -}}
+      <time class="mono" datetime="{{ $p.Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ $p.Date.Format "2006.01.02 15:04" }}</time>
+      <span class="dot dot--xs" role="presentation"></span>
+      {{- with index $p.Params.categories 0 }}
+      <span class="cat">{{ . }}</span>
+      {{- else }}
+      {{- /* 没写分类时回退：posts 分区显示「随笔」，其他分区用分区名 */ -}}
+      <span class="cat">{{ if eq $p.Section "posts" }}随笔{{ else }}{{ $p.Section }}{{ end }}</span>
+      {{- end }}
+    </div>
+
+    <h3 class="post-item__title"><a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a></h3>
+
+    {{- with partial "excerpt.html" (dict "page" $p "len" 88) }}
+    <p class="post-item__excerpt">{{ . }}</p>
+    {{- end }}
+  </div>
+
+  <a class="post-item__thumb g-{{ mod $i 4 }}" href="{{ $p.RelPermalink }}" tabindex="-1" aria-hidden="true">
+    {{- if $cover }}
+      <img src="{{ $cover }}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+    {{- else }}
+      <i></i>
+    {{- end }}
+  </a>
+</article>

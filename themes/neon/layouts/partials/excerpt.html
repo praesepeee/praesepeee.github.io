@@ -1,0 +1,19 @@
+{{- /* =========================================================================
+   Neon Theme · 列表 / 标题下方的纯文本摘要
+   - 优先用 front matter 的 description，没有才退回 .Summary
+   - 先剥掉 Obsidian 的 ![[...]] 嵌入与所有 <img>，再 plainify
+     （否则图片路径会当成正文文字漏到列表摘要和 SEO 描述里）
+   用法：{{ partial "excerpt.html" (dict "page" $p "len" 88) }}
+   ========================================================================= */ -}}
+{{- $p := .page -}}
+{{- $n := .len | default 88 -}}
+{{- $s := $p.Params.description | default $p.Summary -}}
+{{- if $s -}}
+  {{- $s = printf "%v" $s -}}
+{{- $s = replaceRE `!\[\[[^\]]*\]\]` " " $s -}}
+{{- $s = replaceRE `(?is)<(video|audio)[^>]*>.*?</(video|audio)>` " " $s -}}
+{{- $s = replaceRE `(?i)<img[^>]*>` " " $s -}}
+  {{- $s = $s | plainify -}}
+  {{- $s = replaceRE `\s+` " " $s | strings.TrimSpace -}}
+  {{- $s | truncate $n -}}
+{{- end -}}

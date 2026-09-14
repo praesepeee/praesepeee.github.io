@@ -1,0 +1,40 @@
+{{ define "main" }}
+{{- /* 与首页 / 文章页上下篇保持同一排序：按发布时间倒序 */ -}}
+{{- $paginator := .Paginate (.Pages.ByDate.Reverse) -}}
+
+<div class="wrap">
+  <div class="page-hero">
+    <span class="chip chip--eyebrow">
+      <span class="dot" role="presentation"></span>
+      {{ .Params.eyebrow | default (.Title) }}
+    </span>
+    <h1 class="page-hero__title">{{ .Title }}</h1>
+    {{- with .Content }}<div class="page-hero__sub">{{ . }}</div>{{ end }}
+  </div>
+
+  <div class="layout">
+    <div class="layout__main">
+      <div class="sec-head">
+        <span class="sec-head__label">
+          <span class="sec-head__bar" role="presentation"></span>
+          <span class="sec-head__text">文章列表</span>
+        </span>
+        <span class="sec-head__more mono">共 {{ len .Pages }} 篇</span>
+      </div>
+
+      {{- if $paginator.Pages }}
+      <div class="post-list">
+        {{- range $i, $p := $paginator.Pages }}
+          {{ partial "post-card.html" (dict "page" $p "i" $i) }}
+        {{- end }}
+      </div>
+      {{ partial "pagination.html" $ }}
+      {{- else }}
+      <p class="empty">这个分区还没有文章。</p>
+      {{- end }}
+    </div>
+
+    {{ partial "sidebar.html" . }}
+  </div>
+</div>
+{{ end }}

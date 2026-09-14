@@ -1,0 +1,78 @@
+{{- /* =========================================================================
+   Neon Theme · <head>
+   SEO / 样式打包（Hugo Pipes）/ 主题防闪烁脚本 / 可选字体 CDN
+   ========================================================================= */ -}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060a12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f7fb" media="(prefers-color-scheme: light)">
+
+{{/* ---------- 标题与描述 ---------- */}}
+<title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}</title>
+{{- $desc := "" -}}
+{{- if .Description }}{{ $desc = .Description }}
+{{- else if .Summary }}{{ $desc = partial "excerpt.html" (dict "page" . "len" 150) }}
+{{- else }}{{ $desc = site.Params.description | default site.Title }}{{ end }}
+<meta name="description" content="{{ $desc }}">
+<link rel="canonical" href="{{ .Permalink }}">
+
+{{/* ---------- RSS ---------- */}}
+{{- with .OutputFormats.Get "rss" }}
+<link rel="alternate" type="application/rss+xml" href="{{ .Permalink }}" title="{{ site.Title }}">
+{{- end }}
+
+{{/* ---------- Open Graph / Twitter ---------- */}}
+<meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
+<meta property="og:title" content="{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }}{{ end }}">
+<meta property="og:description" content="{{ $desc }}">
+<meta property="og:url" content="{{ .Permalink }}">
+<meta property="og:site_name" content="{{ site.Title }}">
+{{- with site.Params.image }}<meta property="og:image" content="{{ . | absURL }}">{{ end }}
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{{- if .IsPage -}}
+  {{- $data := dict "@context" "https://schema.org" "@type" "BlogPosting"
+      "headline" .Title
+      "datePublished" (.Date.Format "2006-01-02")
+      "dateModified" (.Lastmod.Format "2006-01-02")
+      "mainEntityOfPage" .Permalink -}}
+  {{- $data | jsonify | safeJS -}}
+{{- else -}}
+  {{- dict "@context" "https://schema.org" "@type" "Blog" "name" site.Title "url" site.Home.Permalink | jsonify | safeJS -}}
+{{- end -}}
+</script>
+
+{{/* ---------- 主题防闪烁：必须在样式表之前执行 ---------- */}}
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('neon-theme');
+      if (t !== 'light' && t !== 'dark') {
+        t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.style.colorScheme = t;
+    } catch (e) {}
+  })();
+</script>
+
+{{/* ---------- 可选：字体 CDN（默认关闭，中文走系统字体，国内不会被墙） ---------- */}}
+{{- if site.Params.fonts.useCDN }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="{{ site.Params.fonts.url | default "https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" }}">
+{{- end }}
+
+{{/* ---------- 样式：Hugo Pipes 合并 → 压缩 → 指纹 ---------- */}}
+{{- $css := slice (resources.Get "css/tokens.css") (resources.Get "css/base.css") (resources.Get "css/components.css") (resources.Get "css/chroma.css") -}}
+{{- if ne site.Params.enableLightTheme false -}}
+  {{- $css = $css | append (resources.Get "css/light.css") -}}
+{{- end -}}
+{{- $bundle := $css | resources.Concat "css/neon.css" | minify | fingerprint -}}
+<link rel="stylesheet" href="{{ $bundle.RelPermalink }}" integrity="{{ $bundle.Data.Integrity }}" crossorigin="anonymous">
+
+{{/* ---------- 脚本 ---------- */}}
+{{- $js := resources.Get "js/main.js" | minify | fingerprint -}}
+<script defer src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" crossorigin="anonymous"></script>
+
+{{ partial "extend_head.html" . }}

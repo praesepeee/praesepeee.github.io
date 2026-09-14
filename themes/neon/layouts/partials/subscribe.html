@@ -1,0 +1,14 @@
+{{- /* 订阅卡片。用法：{{ partial "subscribe.html" . }}
+     订阅后端地址在 hugo.toml 里配 params.subscribeAction（如 Buttondown / Mailchimp 的表单 action）。 */ -}}
+<section class="widget card card--accent reveal" id="subscribe">
+  <div class="subscribe__head">
+    <span class="subscribe__icon">{{ partial "icon.html" "sparkle" }}</span>
+    <span class="subscribe__title">{{ site.Params.subscribeTitle | default "订阅更新" }}</span>
+  </div>
+  <p class="subscribe__desc">{{ site.Params.subscribeDesc | default "新文章写好后直接发到你的邮箱。不频繁，也不打扰。" }}</p>
+  <form class="subscribe__form" action="{{ site.Params.subscribeAction | default "#" }}" method="post" target="_blank">
+    <label class="visually-hidden" for="subscribe-email">邮箱地址</label>
+    <input class="subscribe__input" id="subscribe-email" type="email" name="email" placeholder="you@example.com" required>
+    <button class="subscribe__btn" type="submit" aria-label="提交订阅">{{ partial "icon.html" "arrow-right" }}</button>
+  </form>
+</section>

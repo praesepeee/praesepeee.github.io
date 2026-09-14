@@ -1,0 +1,40 @@
+{{ define "main" }}
+{{- /* 分类 / 标签的中文名与复数字段名，避免出现 "categorys" 这类直译 */ -}}
+{{- $singular := .Data.Singular -}}
+{{- $label := $singular -}}
+{{- $plural := printf "%ss" $singular -}}
+{{- if eq $singular "category" }}{{ $label = "分类" }}{{ $plural = "categories" }}{{ end -}}
+{{- if eq $singular "tag" }}{{ $label = "标签" }}{{ $plural = "tags" }}{{ end -}}
+<div class="wrap">
+  <div class="page-hero">
+    <span class="chip chip--eyebrow">
+      <span class="dot" role="presentation"></span>
+      {{ $label }}
+    </span>
+    <h1 class="page-hero__title">{{ .Title }}</h1>
+    {{- with .Content }}<div class="page-hero__sub">{{ . }}</div>{{ end }}
+  </div>
+
+  <div style="padding-block:var(--section-y)">
+    <div class="sec-head">
+      <span class="sec-head__label">
+        <span class="sec-head__bar" role="presentation"></span>
+        <span class="sec-head__text">共 {{ len .Pages }} 个</span>
+      </span>
+    </div>
+
+    {{- if .Pages }}
+    <div class="term-cloud">
+      {{- range .Data.Terms.ByCount }}
+      <a class="chip" href="{{ .Page.RelPermalink }}">
+        <span>{{ .Page.Title }}</span>
+        <span class="count">{{ .Count }}</span>
+      </a>
+      {{- end }}
+    </div>
+    {{- else }}
+    <p class="empty">还没有任何{{ $label }}。在文章 front matter 里写 {{ $plural }} 就会自动出现。</p>
+    {{- end }}
+  </div>
+</div>
+{{ end }}

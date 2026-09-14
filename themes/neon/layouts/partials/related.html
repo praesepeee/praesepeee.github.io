@@ -1,0 +1,17 @@
+{{- /* 延伸阅读（同分区最新 3 篇，自动排除当前文章）。用法：{{ partial "related.html" . }} */ -}}
+{{- $posts := where site.RegularPages "Section" "posts" -}}
+{{- if eq (len $posts) 0 }}{{ $posts = site.RegularPages }}{{ end -}}
+{{- $rel := first 3 (where $posts "Permalink" "!=" .Permalink) -}}
+{{- if $rel }}
+<section class="widget card reveal">
+  <div class="widget__head">{{ partial "icon.html" "sparkle" }}<span>也许你还想读</span></div>
+  <div class="related-list">
+    {{- range $i, $p := $rel }}
+    <a class="related-item" href="{{ $p.RelPermalink }}">
+      <span class="related-item__num">{{ printf "%02d" (add $i 1) }}</span>
+      <span class="related-item__title">{{ $p.Title }}</span>
+    </a>
+    {{- end }}
+  </div>
+</section>
+{{- end }}

@@ -1,0 +1,110 @@
+# ==========================================================================
+# Neon 主题配置
+#
+# 想切回原来的 PaperMod：把下面 theme 一行改成 theme = "PaperMod" 即可，
+# themes/PaperMod 目录、以及本文件底部的 PaperMod 参数都原样保留着。
+# 详细说明见 themes/neon/README.md
+# ==========================================================================
+
+baseURL = 'https://praesepeee.github.io/'
+locale = 'zh-cn'
+title = 'My Blog'
+theme = "neon"
+
+[pagination]
+  pagerSize = 10
+
+# ---------------------------------------------------------------- 渲染
+[markup]
+  [markup.highlight]
+    # 用 CSS 类代替内联样式，代码配色才能跟着主题走
+    # （配色在 themes/neon/assets/css/chroma.css）
+    noClasses = false
+  [markup.tableOfContents]
+    # 目录只收 h2/h3，避免长文章目录过长
+    startLevel = 2
+    endLevel = 3
+
+# ---------------------------------------------------------------- 导航
+[[menus.main]]
+  name = '首页'
+  url = '/'
+  weight = 10
+
+[[menus.main]]
+  name = '归档'
+  url = '/archives/'
+  weight = 20
+
+[[menus.main]]
+  name = '标签'
+  url = '/tags/'
+  weight = 30
+
+# ---------------------------------------------------------------- 站点参数
+[params]
+  # 站点描述（用于 SEO / OG / 页脚兜底）。这里不涉及任何个人身份信息。
+  description = '待完善'
+  footerNote = 'DARK MODE · ACCENT #22D3EE'
+  enableLightTheme = true            # 允许右上角按钮切换深/浅色
+
+  # 搜索按钮默认关闭（本站还没有搜索页）。等接了搜索把 enable 改成 true。
+  search.enable = false
+  search.url = '/search/'
+
+  # 订阅功能：用户明确不做。导航栏按钮 / 侧栏订阅卡 / 页脚入口都已移除；
+  # partials/subscribe.html 文件保留着，将来要做时把调用加回去即可，下面参数仍然有效。
+  # 填上服务商的 form action 就能真的收邮件
+  # 例如 Buttondown: https://buttondown.email/api/emails/embed-subscribe/<用户名>
+  subscribeLabel = '订阅更新'
+  subscribeAction = '#'
+  subscribeTitle = '订阅更新'
+  subscribeDesc = '新文章写好后直接发到你的邮箱。不频繁，也不打扰。'
+
+  # 字体：中文默认走系统字体（零请求、国内不会被墙）
+  # 想用 Sora + JetBrains Mono 的原始设计效果，把 useCDN 改成 true
+  [params.fonts]
+    useCDN = false
+    url = 'https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap'
+
+  # 首页 Hero 顶栏已按用户要求整体移除（2026-09-14）：[params.hero] 与 [params.hero.cta1]
+  # 连同标题、按钮一起删掉了，layouts/index.html 里也不再渲染 hero 区块 ——
+  # 首页现在直接从「最新文章 + 侧栏」开始（顶部间距来自 .layout 的 padding-block）。
+  # 想恢复：从 git 历史取回下面两段参数，并把 hero 那段模板加回 index.html。
+
+  # 侧栏 / 页脚的社交按钮已全部移除（不展示任何个人身份与社交媒体链接）。
+  # 需要时再打开 `social` 表，键名对应主题内置图标，可选：
+  # github / x / rss / mail / link / share / heart / globe
+
+  # 页脚已按用户要求整体移除（baseof.html 里不再调用 partials/footer.html）。
+  # 下面的参数与 partials/footer.html 文件都保留着，需要时加回那一行调用即可。
+  [params.footer]
+    description = '待完善'
+    # 想完全自定义页脚链接栏，取消下面注释即可（会覆盖自动生成的两栏）
+    # columns = [
+    #   { title = '浏览', links = [
+    #     { name = '全部文章', url = '/posts/' },
+    #     { name = '归档', url = '/archives/' },
+    #     { name = '标签', url = '/tags/' },
+    #   ] },
+    #   { title = '订阅', links = [
+    #     { name = 'RSS 订阅', url = '/index.xml' },
+    #   ] },
+    # ]
+
+  # 「关于我」页面与栏目已整体移除（含 heroTitle / 个人故事 / 现在在做 / 联系方式），
+  # 对应的 content/about.md 与 layouts/_default/about.html 也已删除。
+
+  # 评论：留空则显示一张「如何接入」的说明卡，不会出现假的输入框
+  # [params.comments]
+  #   provider = 'giscus'
+  #   repo = 'praesepeee/praesepeee.github.io'
+  #   repoId = 'R_xxxxxx'
+  #   category = 'Announcements'
+  #   categoryId = 'DIC_xxxxxx'
+
+  # ↓↓↓ 以下为 PaperMod 参数，切回 PaperMod 时仍然生效 ↓↓↓
+  ShowReadingTime = true
+  ShowShareButtons = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true

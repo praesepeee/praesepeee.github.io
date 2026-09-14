@@ -1,0 +1,108 @@
+{{ define "main" }}
+{{- $cover := partial "img-url.html" (dict "page" . "src" .Params.cover) -}}
+{{- $imgs := .Params.images -}}
+{{- if and (not $cover) $imgs (reflect.IsSlice $imgs) -}}
+  {{- $cover = partial "img-url.html" (dict "page" . "src" (index $imgs 0)) -}}
+{{- end -}}
+{{- $cat := index .Params.categories 0 | default "随笔" -}}
+
+{{- /* 上下篇：直接沿用 Hugo 的默认文章顺序（新→旧），保证和列表页看到的一致。
+       不要在这里再 .ByDate.Reverse —— 重排会把同日期文章的先后顺序翻转，导致错位。 */ -}}
+{{- $posts := where site.RegularPages "Section" "posts" -}}
+{{- if eq (len $posts) 0 }}{{ $posts = site.RegularPages }}{{ end -}}
+{{- /* 排序必须与首页 / 列表页完全一致（.ByDate.Reverse），否则上下篇会和列表的顺序对不上。
+       不要在这里单独用默认顺序或只改一半 —— 以前就是这么错位的。 */ -}}
+{{- $sorted := $posts.ByDate.Reverse -}}
+{{- $idx := -1 -}}
+{{- range $i, $p := $sorted -}}
+  {{- if eq $p.Permalink $.Permalink }}{{ $idx = $i }}{{ end -}}
+{{- end -}}
+{{- $newer := "" -}}
+{{- $older := "" -}}
+{{- if ge $idx 0 -}}
+  {{- if gt $idx 0 }}{{ $newer = index $sorted (sub $idx 1) }}{{ end -}}
+  {{- if lt $idx (sub (len $sorted) 1) }}{{ $older = index $sorted (add $idx 1) }}{{ end -}}
+{{- end -}}
+
+<article>
+  {{- /* ---------------- 文章头部 ---------------- */ -}}
+  <div class="wrap">
+    <header class="post-head">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="{{ site.Home.RelPermalink }}">首页</a>
+        {{ partial "icon.html" "chevron-right" }}
+        {{- with site.GetPage (printf "/categories/%s" (index $.Params.categories 0)) }}
+        <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+        {{- else }}
+        <a href="{{ "posts/" | relURL }}">文章</a>
+        {{- end }}
+        {{ partial "icon.html" "chevron-right" }}
+        <span class="is-current" aria-current="page">{{ .Title | truncate 18 }}</span>
+      </nav>
+
+      <h1 class="post-head__title">{{ .Title }}</h1>
+
+      {{- with partial "excerpt.html" (dict "page" . "len" 130) }}
+      <p class="post-head__lead">{{ . }}</p>
+      {{- end }}
+
+      <div class="post-head__meta">
+        <p class="post-meta-line">
+          {{ .Date.Format "2006.01.02 15:04" }} · {{ .ReadingTime }} 分钟阅读 · {{ .WordCount }} 字
+        </p>
+
+        <div class="post-actions">
+          <button class="iconbtn iconbtn--mini" type="button" data-copy-link aria-label="复制本文链接">{{ partial "icon.html" "link" }}</button>
+          <button class="iconbtn iconbtn--mini" type="button" data-share aria-label="分享本文">{{ partial "icon.html" "share" }}</button>
+          {{- with site.Home.OutputFormats.Get "rss" }}
+          <a class="iconbtn iconbtn--mini" href="{{ .Permalink }}" aria-label="订阅 RSS">{{ partial "icon.html" "rss" }}</a>
+          {{- end }}
+        </div>
+      </div>
+    </header>
+  </div>
+
+  {{- /* ---------------- 正文 + 右栏 ---------------- */ -}}
+  <div class="wrap">
+    <div class="layout layout--post">
+      <div class="layout__main">
+        <div class="prose">{{ partial "post-content.html" . }}</div>
+
+        {{- with .Params.tags }}
+        <div class="post-tags">
+          {{- range $i, $t := . }}
+            {{- with site.GetPage (printf "/tags/%s" $t) }}
+            <a class="chip{{ if eq $i 0 }} chip--accent{{ end }}" href="{{ .RelPermalink }}">{{ .Title }}</a>
+            {{- end }}
+          {{- end }}
+        </div>
+        {{- end }}
+
+        {{- if or $newer $older }}
+        <nav class="postnav" aria-label="上下篇">
+          {{- with $older }}
+          <a class="postnav__card card card--link" href="{{ .RelPermalink }}">
+            <span class="postnav__dir">← 上一篇</span>
+            <span class="postnav__title">{{ .Title }}</span>
+          </a>
+          {{- end }}
+          {{- with $newer }}
+          <a class="postnav__card postnav__card--next card card--link" href="{{ .RelPermalink }}">
+            <span class="postnav__dir">下一篇 →</span>
+            <span class="postnav__title">{{ .Title }}</span>
+          </a>
+          {{- end }}
+        </nav>
+        {{- end }}
+      </div>
+
+      <aside class="layout__rail">
+        {{ partial "toc.html" . }}
+        {{ partial "related.html" . }}
+      </aside>
+    </div>
+  </div>
+
+  {{ partial "comments.html" . }}
+</article>
+{{ end }}

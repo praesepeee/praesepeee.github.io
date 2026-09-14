@@ -1,0 +1,50 @@
+{{ define "main" }}
+{{- $posts := where site.RegularPages "Section" "posts" -}}
+{{- if eq (len $posts) 0 }}{{ $posts = site.RegularPages }}{{ end -}}
+{{- /* 按发布时间倒序。Hugo 默认（文章都没写 weight 时）本来就是 date 倒序，这里显式写明，
+       防止将来某篇带了 weight 把顺序顶乱。改这里要同步改 list.html 与 single.html 的上下篇。 */ -}}
+{{- $posts = $posts.ByDate.Reverse -}}
+
+{{- with $posts }}
+  {{- /* 首页 Hero 顶栏与「置顶长文」板块已按用户要求整体移除（2026-09-14）；
+         顶部间距靠 .layout 自带的 padding-block: var(--section-y)，不要再补 hero。
+         两点注意：
+         1) 置顶文章不再单独抽出来展示，所以列表必须用完整的 $posts。
+            以前会 where … "!=" $pin.Permalink 排除置顶那篇，照旧排除的话最新一篇会从首页消失。
+         2) front matter 里的 featured = true 现在不产生任何效果（可留可删）。
+         需要恢复看 themes/neon/README.md「首页结构」。 */ -}}
+  {{- $paginator := $.Paginate $posts -}}
+
+  {{- /* ---------------- 列表 + 侧边栏 ---------------- */ -}}
+  <div class="wrap">
+    <div class="layout">
+      <div class="layout__main">
+        <div class="sec-head">
+          <span class="sec-head__label">
+            <span class="sec-head__bar" role="presentation"></span>
+            <span class="sec-head__text">最新文章</span>
+          </span>
+          <a class="sec-head__more" href="{{ "posts/" | relURL }}">全部 {{ len $posts }} 篇 {{ partial "icon.html" "chevron-right" }}</a>
+        </div>
+
+        {{- if $paginator.Pages }}
+        <div class="post-list">
+          {{- range $i, $p := $paginator.Pages }}
+            {{ partial "post-card.html" (dict "page" $p "i" $i) }}
+          {{- end }}
+        </div>
+        {{ partial "pagination.html" $ }}
+        {{- else }}
+        <p class="empty">这个位置还没有文章。在 content/posts/ 下新建一篇 Markdown 就会出现在这里。</p>
+        {{- end }}
+      </div>
+
+      {{ partial "sidebar.html" . }}
+    </div>
+  </div>
+{{- else }}
+  <div class="wrap" style="padding-block:120px">
+    <p class="empty">站点还没有任何内容。先在 content/posts/ 下写第一篇吧。</p>
+  </div>
+{{- end }}
+{{ end }}

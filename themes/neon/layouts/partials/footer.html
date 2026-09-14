@@ -1,0 +1,67 @@
+{{- /* =========================================================================
+   Neon Theme · 页脚
+   链接栏优先级：params.footer.columns（完全自定义） > 自动生成
+   ========================================================================= */ -}}
+{{- $columns := site.Params.footer.columns -}}
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <div class="footer__brand-row">
+          <span class="brandmark">{{ partial "icon.html" "logo" }}</span>
+          <span class="nav__brand-name">{{ site.Title }}</span>
+        </div>
+        <p class="footer__desc">{{ site.Params.footer.description | default site.Params.description | default site.Title }}</p>
+      </div>
+
+      <div class="footer__cols">
+        {{- if $columns }}
+          {{- range $columns }}
+          <div class="footer__col">
+            <h2 class="footer__col-title">{{ .title }}</h2>
+            <ul>
+              {{- range .links }}
+              <li><a href="{{ .url }}"{{ if hasPrefix .url "http" }} target="_blank" rel="noopener"{{ end }}>{{ .name }}</a></li>
+              {{- end }}
+            </ul>
+          </div>
+          {{- end }}
+        {{- else }}
+          {{- /* 默认列 1：站点主导航 */ -}}
+          <div class="footer__col">
+            <h2 class="footer__col-title">浏览</h2>
+            <ul>
+              {{- range site.Menus.main }}
+              <li><a href="{{ .URL }}">{{ .Name }}</a></li>
+              {{- end }}
+            </ul>
+          </div>
+
+          {{- /* 默认列 2：订阅 */ -}}
+          <div class="footer__col">
+            <h2 class="footer__col-title">订阅</h2>
+            <ul>
+              {{- with site.Home.OutputFormats.Get "rss" }}
+              <li><a href="{{ .Permalink }}">RSS 订阅</a></li>
+              {{- end }}
+              {{- with site.Params.email }}
+              <li><a href="mailto:{{ . }}">邮件联系</a></li>
+              {{- end }}
+              {{- with site.Params.footer.extraLink }}
+              <li><a href="{{ .url }}">{{ .name }}</a></li>
+              {{- end }}
+            </ul>
+          </div>
+        {{- end }}
+      </div>
+    </div>
+
+    <div class="footer__rule" role="presentation"></div>
+
+    <div class="footer__bottom">
+      <p class="mono">&copy; {{ now.Year }} {{ site.Title }} · 保留所有权利</p>
+      <p class="mono">{{ site.Params.footerNote | default "DARK MODE · ACCENT #22D3EE" }}</p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,47 @@
+{{- /* =========================================================================
+   Neon Theme · 正文渲染
+   在 Hugo 默认渲染结果之上，额外兼容 Obsidian 的「附件嵌入」语法：
+
+     ![[文件名.png]]       →  <img>
+     ![[文件名.mp4]]       →  <video controls>
+     ![[文件名.mp3]]       →  <audio controls>
+     ![[文件名.pdf]]       →  <a>（其余类型一律给下载/打开链接）
+     ![[文件名.png|300]]   →  同 <img>（别名 / 尺寸会被忽略）
+
+   匹配范围是**本文档 bundle 内的资源** —— 附件与 index.md 放同一目录即可；
+   放进子目录也认（按文件名匹配，会连子目录前缀一起兼容）。
+
+   注意：bundle 资源的 .Name 在附件位于子目录时会带前缀（如 assets/a.png），
+   而 Obsidian 写的是纯文件名，所以两种写法都要匹配一遍。
+
+   标准 Markdown 的 ![alt](a.png) 由 `_markup/render-image.html` 钩子按同样的后缀规则处理，
+   两种写法最终产出一致（这套 replaceRE 只负责 Obsidian 语法）。
+
+   用法：{{ partial "post-content.html" . }}
+   ========================================================================= */ -}}
+{{- $images := slice ".png" ".jpg" ".jpeg" ".gif" ".webp" ".avif" ".bmp" ".svg" -}}
+{{- $videos := slice ".mp4" ".m4v" ".mov" ".webm" ".ogv" ".mkv" ".avi" ".3gp" ".wmv" ".flv" -}}
+{{- $audios := slice ".mp3" ".wav" ".m4a" ".aac" ".ogg" ".oga" ".opus" ".flac" ".weba" -}}
+{{- $content := .Content -}}
+{{- range .Resources -}}
+  {{- $url := .RelPermalink -}}
+  {{- $base := path.Base .Name -}}
+  {{- $ext := lower (path.Ext .Name) -}}
+  {{- $tag := "" -}}
+  {{- if in $images $ext -}}
+    {{- $tag = printf `<img src="%s" alt="%s" loading="lazy">` $url $base -}}
+  {{- else if in $videos $ext -}}
+    {{- $tag = printf `<video src="%s" controls playsinline preload="metadata"><a href="%s">当前浏览器无法播放该视频，点此下载</a></video>` $url $url -}}
+  {{- else if in $audios $ext -}}
+    {{- $tag = printf `<audio src="%s" controls preload="metadata"><a href="%s">当前浏览器无法播放该音频，点此下载</a></audio>` $url $url -}}
+  {{- else -}}
+    {{- $tag = printf `<a class="file-embed" href="%s" target="_blank" rel="noopener">%s</a>` $url $base -}}
+  {{- end -}}
+  {{- $keys := slice .Name -}}
+  {{- if ne $base .Name }}{{ $keys = $keys | append $base }}{{ end -}}
+  {{- range $keys -}}
+    {{- $pat := printf `!\[\[%s(\|[^\]]*)?\]\]` . -}}
+    {{- $content = replaceRE $pat $tag $content -}}
+  {{- end -}}
+{{- end -}}
+{{- $content | safeHTML -}}

@@ -1,0 +1,58 @@
+{{- /* =========================================================================
+   Neon Theme · 留言区
+   未配置评论系统时不渲染假表单，只给一张说明卡 —— 避免用户以为能提交却没有后端。
+   在 hugo.toml 里配 giscus 或 utterances 即可启用：
+     [params.comments]
+       provider    = "giscus"
+       repo        = "owner/repo"
+       repoId      = "R_xxxx"
+       category    = "Announcements"
+       categoryId  = "DIC_xxxx"
+   ========================================================================= */ -}}
+{{- $c := site.Params.comments -}}
+
+<section class="wrap" id="comments" style="padding-bottom:80px">
+  <div class="sec-head">
+    <span class="sec-head__label">
+      <span class="sec-head__bar" role="presentation"></span>
+      <span class="sec-head__text">留言</span>
+    </span>
+  </div>
+
+  {{- if and $c (eq $c.provider "giscus") $c.repo $c.repoId }}
+    <script src="https://giscus.app/client.js"
+            data-repo="{{ $c.repo }}"
+            data-repo-id="{{ $c.repoId }}"
+            data-category="{{ $c.category | default "Announcements" }}"
+            data-category-id="{{ $c.categoryId }}"
+            data-mapping="{{ $c.mapping | default "pathname" }}"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="top"
+            data-theme="dark_dimmed"
+            data-lang="zh-CN"
+            data-loading="lazy"
+            crossorigin="anonymous"
+            async></script>
+
+  {{- else if and $c (eq $c.provider "utterances") $c.repo }}
+    <script src="https://utteranc.es/client.js"
+            repo="{{ $c.repo }}"
+            issue-term="{{ $c.issueTerm | default "pathname" }}"
+            label="{{ $c.label | default "comment" }}"
+            theme="github-dark"
+            crossorigin="anonymous"
+            async></script>
+
+  {{- else }}
+    <div class="widget card">
+      <div class="widget__head">{{ partial "icon.html" "message" }}<span>还没有接入评论系统</span></div>
+      <p class="subscribe__desc" style="margin-bottom:0">
+        这套主题的留言区支持 <strong>giscus</strong>（基于 GitHub Discussions）与 <strong>utterances</strong>（基于 Issues）。
+        在 <code style="font-family:var(--font-mono);font-size:12px">hugo.toml</code> 里补上
+        <code style="font-family:var(--font-mono);font-size:12px">[params.comments]</code> 配置后，这里会自动换成真实评论区。
+      </p>
+    </div>
+  {{- end }}
+</section>

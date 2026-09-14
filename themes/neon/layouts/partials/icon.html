@@ -1,0 +1,38 @@
+{{- /* =========================================================================
+   Neon Theme · 图标
+   用法：{{ partial "icon.html" "search" }}
+   全部为 24×24 线性图标，颜色继承 currentColor —— 换主题时自动跟随文字色。
+   ========================================================================= */ -}}
+{{- $icons := dict
+  "logo"        `<path d="M9.5 22.5V10l13 12.5V10" stroke-width="2.6"/>`
+  "search"      `<circle cx="11" cy="11" r="7"/><path d="M16.4 16.4 21 21"/>`
+  "menu"        `<path d="M3 6.5h18M3 12h18M3 17.5h12"/>`
+  "close"       `<path d="M6 6l12 12M18 6 6 18"/>`
+  "arrow-right" `<path d="M4 12h15M13 6l6 6-6 6"/>`
+  "arrow-up-right" `<path d="M7 17 17 7M8.5 7H17v8.5"/>`
+  "chevron-right" `<path d="M9 5l7 7-7 7"/>`
+  "chevron-down"  `<path d="M6 9.5l6 6 6-6"/>`
+  "clock"       `<circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.6 2.1"/>`
+  "calendar"    `<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>`
+  "tag"         `<path d="M11.2 3.5H4.8a1.3 1.3 0 0 0-1.3 1.3v6.4l9.3 9.3a1.8 1.8 0 0 0 2.5 0l5.2-5.2a1.8 1.8 0 0 0 0-2.5l-9.3-9.3z"/><circle cx="7.6" cy="7.6" r="1.3" fill="currentColor" stroke="none"/>`
+  "folder"      `<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h2.9l2 2.6h8.1A2.5 2.5 0 0 1 21 10.1v6.4A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-9z"/>`
+  "archive"     `<rect x="3" y="4" width="18" height="5" rx="2"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4"/>`
+  "github"      `<path d="M9.4 19.4c-4.1 1.2-4.1-2.2-5.9-2.7m11.9 5.1v-3.5c0-1 .1-1.4-.5-1.9 2.3-.3 4.6-1.2 4.6-5.1a4 4 0 0 0-1.1-2.8 3.7 3.7 0 0 0-.1-2.8s-.9-.3-2.9 1.1a10.2 10.2 0 0 0-5.2 0C8 5.4 7.1 5.7 7.1 5.7a3.7 3.7 0 0 0-.1 2.8A4 4 0 0 0 5.9 11.3c0 3.9 2.3 4.8 4.6 5.1-.6.5-.6 1-.6 1.9v3.5"/>`
+  "x"           `<path d="M4.5 4.5l15 15M19.5 4.5l-15 15"/>`
+  "rss"         `<path d="M5 19.2h.02" stroke-width="2.6"/><path d="M4 12.2a7.8 7.8 0 0 1 7.8 7.8" stroke-width="1.8"/><path d="M4 5.2A14.8 14.8 0 0 1 18.8 20" stroke-width="1.8"/>`
+  "mail"        `<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4.2 7.8l6.9 4.9a1.6 1.6 0 0 0 1.8 0l6.9-4.9"/>`
+  "moon"        `<path d="M20.5 14.8A8.6 8.6 0 0 1 9.2 3.5a8.6 8.6 0 1 0 11.3 11.3z"/>`
+  "sun"         `<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/>`
+  "share"       `<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/>`
+  "message"     `<path d="M21 11.6c0 4.1-4 7.4-9 7.4a10.4 10.4 0 0 1-3-.4L4 21l1.4-3.6A7.1 7.1 0 0 1 3 11.6C3 7.5 7 4.2 12 4.2s9 3.3 9 7.4z"/>`
+  "heart"       `<path d="M12 20.2s-7.4-4.6-7.4-9.6A4.2 4.2 0 0 1 12 7.7a4.2 4.2 0 0 1 7.4 2.9c0 5-7.4 9.6-7.4 9.6z"/>`
+  "link"        `<path d="M10.2 13.4a3.6 3.6 0 0 0 5.1 0l3-3a3.6 3.6 0 1 0-5.1-5.1l-1.3 1.3"/><path d="M13.8 10.6a3.6 3.6 0 0 0-5.1 0l-3 3a3.6 3.6 0 1 0 5.1 5.1l1.3-1.3"/>`
+  "sparkle"     `<path d="M12 3l1.9 5.4L19.3 10l-5.4 1.9L12 17.3l-1.9-5.4L4.7 10l5.4-1.6L12 3z"/>`
+  "external"    `<path d="M14 4h6v6M20 4l-8.5 8.5M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>`
+  "user"        `<circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>`
+  "edit"        `<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z"/>`
+  "globe"       `<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9S14.6 18.3 12 21c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/>`
+-}}
+{{- $name := . | default "sparkle" -}}
+{{- $path := index $icons $name | default (index $icons "sparkle") -}}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{{ $path | safeHTML }}</svg>

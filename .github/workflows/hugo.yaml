@@ -1,0 +1,78 @@
+
+name: Deploy Hugo
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      force_transcode:
+        description: '忽略缓存，强制重新转码所有视频'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同时只跑一次部署；排队中的那次不会被打断（打断会丢掉已转码的产物）
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      # 视频转码参数，想更清晰就调小 CRF，想更快就换 faster 预设
+      MAX_HEIGHT: '1080'
+      CRF: '23'
+      PRESET: 'veryfast'
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      # ---------------------------------------------------------------- 视频
+      # 手机拍的多半是 HEVC / H.265，桌面浏览器放不出来，
+      # 所以在 hugo 构建之前先把视频统一转成 H.264 + AAC（脚本会写回原文件，文件名不变）
+      - name: 计算视频指纹
+        id: video-hash
+        run: echo "value=$(bash .github/scripts/transcode-videos.sh --hash)" >> "$GITHUB_OUTPUT"
+
+      - name: 复用转码缓存
+        uses: actions/cache@v4
+        with:
+          path: .cache/transcoded
+          key: videos-${{ steps.video-hash.outputs.value }}
+
+      - name: 转码视频（HEVC → H.264 + AAC）
+        env:
+          FORCE: ${{ github.event.inputs.force_transcode == 'true' && '1' || '0' }}
+        run: bash .github/scripts/transcode-videos.sh
+
+      # ---------------------------------------------------------------- 构建
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: latest
+          extended: true
+
+      - run: hugo --minify
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+
+    steps:
+      - uses: actions/deploy-pages@v4

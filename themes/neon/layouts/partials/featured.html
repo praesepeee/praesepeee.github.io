@@ -1,0 +1,46 @@
+{{- /* =========================================================================
+   Neon Theme · 置顶长文卡片
+   用法：{{ partial "featured.html" (dict "page" $page "i" 0) }}
+   ========================================================================= */ -}}
+{{- $p := .page -}}
+{{- $i := .i | default 0 -}}
+{{- $cover := partial "img-url.html" (dict "page" $p "src" $p.Params.cover) -}}
+{{- $imgs := $p.Params.images -}}
+{{- if and (not $cover) $imgs (reflect.IsSlice $imgs) -}}
+  {{- $cover = partial "img-url.html" (dict "page" $p "src" (index $imgs 0)) -}}
+{{- end -}}
+{{- $cat := index $p.Params.categories 0 | default "随笔" -}}
+
+<article class="featured reveal">
+  <a class="featured__cover g-{{ mod $i 4 }}" href="{{ $p.RelPermalink }}" tabindex="-1" aria-hidden="true">
+    {{- if $cover }}
+      <img src="{{ $cover }}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+    {{- else }}
+      <span class="deco" role="presentation">
+        <span class="deco__grid"></span>
+        <span class="deco__glow deco__glow--cyan"></span>
+        <span class="deco__glow deco__glow--violet" style="left:-80px;top:60px"></span>
+      </span>
+    {{- end }}
+    <span class="chip chip--on-cover">{{ $cat | default "置顶" }}</span>
+  </a>
+
+  <div class="featured__body">
+    <div class="post-item__meta">
+      <time class="mono" datetime="{{ $p.Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ $p.Date.Format "2006.01.02 15:04" }}</time>
+      <span class="dot dot--xs" role="presentation"></span>
+      <span class="cat">{{ $cat | default "随笔" }}</span>
+    </div>
+
+    <h2 class="featured__title"><a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a></h2>
+
+    {{- with partial "excerpt.html" (dict "page" $p "len" 110) }}
+    <p class="featured__excerpt">{{ . }}</p>
+    {{- end }}
+
+    <div class="featured__foot">
+      <span class="mono">{{ $p.ReadingTime }} 分钟</span>
+      <a class="more-link" href="{{ $p.RelPermalink }}">阅读全文 {{ partial "icon.html" "arrow-right" }}</a>
+    </div>
+  </div>
+</article>

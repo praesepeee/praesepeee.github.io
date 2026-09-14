@@ -1,0 +1,59 @@
+{{- /* =========================================================================
+   Neon Theme · 顶部导航（吸顶 + 玻璃底 + 移动端折叠菜单）
+   注：右上角的「订阅更新」按钮已按用户要求移除（订阅功能不做）。
+   ========================================================================= */ -}}
+{{- $cur := .RelPermalink -}}
+{{- $root := "/" | relURL -}}
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a class="nav__brand" href="{{ site.Home.RelPermalink }}">
+      <span class="brandmark">{{ partial "icon.html" "logo" }}</span>
+      <span class="nav__brand-name">{{ site.Title }}</span>
+    </a>
+
+    <nav class="nav__links" aria-label="主导航">
+      {{- range site.Menus.main }}
+        {{- $u := .URL | relURL -}}
+        {{- $active := or (eq $cur $u) (and (ne $u $root) (hasPrefix $cur $u)) -}}
+        <a class="nav__link{{ if $active }} is-active{{ end }}" href="{{ .URL }}"{{ if $active }} aria-current="page"{{ end }}>{{ .Name }}</a>
+      {{- end }}
+    </nav>
+
+    <div class="nav__actions">
+      {{- if site.Params.search.enable }}
+        <a class="iconbtn" href="{{ site.Params.search.url | default "/search/" }}" aria-label="搜索">
+          {{ partial "icon.html" "search" }}
+        </a>
+      {{- end }}
+
+      {{- if ne site.Params.enableLightTheme false }}
+        <button class="iconbtn" type="button" data-theme-toggle aria-label="切换主题">
+          <span data-icon="moon" style="display:grid;place-items:center">{{ partial "icon.html" "moon" }}</span>
+          <span data-icon="sun" hidden style="display:grid;place-items:center">{{ partial "icon.html" "sun" }}</span>
+        </button>
+      {{- end }}
+
+      <button class="iconbtn nav__burger" type="button" data-menu-toggle aria-expanded="false" aria-label="打开菜单" aria-controls="neon-mobile-nav">
+        {{ partial "icon.html" "menu" }}
+      </button>
+    </div>
+  </div>
+
+  <div class="nav__mobile" id="neon-mobile-nav" data-mobile-nav>
+    <div class="wrap">
+      <ul>
+        {{- range site.Menus.main }}
+          {{- $u := .URL | relURL -}}
+          {{- $active := or (eq $cur $u) (and (ne $u $root) (hasPrefix $cur $u)) -}}
+          <li>
+            <a class="{{ if $active }}is-active{{ end }}" href="{{ .URL }}"{{ if $active }} aria-current="page"{{ end }}>
+              <span>{{ .Name }}</span>
+              {{ partial "icon.html" "chevron-right" }}
+            </a>
+          </li>
+        {{- end }}
+      </ul>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,14 @@
+{{ define "main" }}
+<div class="wrap">
+  <div class="err-page">
+    <div>
+      <p class="err-page__code">404</p>
+      <p class="err-page__text">这个地址上没有东西。也许是链接写错了，也许是我把它拿掉了。</p>
+      <div style="display:flex;gap:14px;justify-content:center;margin-top:28px;flex-wrap:wrap">
+        <a class="btn btn--primary" href="{{ site.Home.RelPermalink }}">回到首页{{ partial "icon.html" "arrow-right" }}</a>
+        <a class="btn btn--ghost" href="{{ "archives/" | relURL }}">翻归档{{ partial "icon.html" "arrow-up-right" }}</a>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}

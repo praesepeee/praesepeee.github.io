@@ -1,0 +1,15 @@
+# Neon — 深色科技感博客主题
+# 由 Ardot 设计稿 1:1 落地的 Hugo 主题实现
+name = "Neon"
+license = "MIT"
+licenselink = "https://github.com/praesepeee/praesepeee.github.io/blob/main/themes/neon/LICENSE"
+description = "深色底 + 青蓝霓虹渐变 + 玻璃拟态 + 网格线条的响应式博客主题，含文章列表、文章详情、侧边栏（分类 / 标签 / 归档 / 订阅）、归档页与标签总览页。不包含作者 / 个人身份区块。"
+
+min_version = "0.128.0"
+
+[author]
+  name = "praesepeee"
+
+[original]
+  # 本主题为原创实现，视觉方案来自 Ardot 设计稿
+  name = "Neon Blog Theme (Ardot)"

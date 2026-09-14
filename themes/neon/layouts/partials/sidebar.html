@@ -1,0 +1,67 @@
+{{- /* =========================================================================
+   Neon Theme · 侧边栏
+   3 个部件：分类 / 标签 / 归档（不含任何作者 / 个人身份区块）
+   订阅卡已按用户要求移除（订阅功能不做），partials/subscribe.html 保留未删。
+   全部按「有数据才显示、没数据显示空状态」处理，新站也不会露出破图。
+   ========================================================================= */ -}}
+{{- $posts := where site.RegularPages "Section" "posts" -}}
+{{- if eq (len $posts) 0 }}{{ $posts = site.RegularPages }}{{ end -}}
+
+<aside class="layout__rail">
+
+  {{/* ---------- 1. 分类 ---------- */}}
+  <section class="widget card reveal">
+    <div class="widget__head">{{ partial "icon.html" "folder" }}<span>分类</span></div>
+    {{- with site.Taxonomies.categories }}
+      <div class="tax-list">
+        {{- range first 4 .ByCount }}
+        <a class="tax-row" href="{{ .Page.RelPermalink }}">
+          <span>{{ .Page.Title }}</span>
+          <span class="count mono">{{ .Count }}</span>
+        </a>
+        {{- end }}
+      </div>
+    {{- else }}
+      <p class="mono">还没有分类</p>
+    {{- end }}
+  </section>
+
+  {{/* ---------- 2. 标签 ---------- */}}
+  <section class="widget card reveal">
+    <div class="widget__head">{{ partial "icon.html" "tag" }}<span>标签</span></div>
+    {{- with site.Taxonomies.tags }}
+      <div class="tagcloud">
+        {{- range $i, $t := first 8 .ByCount }}
+        <a class="chip{{ if eq $i 0 }} chip--accent{{ end }}" href="{{ $t.Page.RelPermalink }}">{{ $t.Page.Title }}</a>
+        {{- end }}
+      </div>
+      {{- with site.GetPage "/tags" }}
+      <div class="widget__divider" role="presentation"></div>
+      <a class="widget__link" href="{{ .RelPermalink }}"><span>全部标签</span>{{ partial "icon.html" "arrow-right" }}</a>
+      {{- end }}
+    {{- else }}
+      <p class="mono">还没有标签</p>
+    {{- end }}
+  </section>
+
+  {{/* ---------- 3. 归档 ---------- */}}
+  <section class="widget card reveal">
+    <div class="widget__head">{{ partial "icon.html" "calendar" }}<span>归档</span></div>
+    {{- $groups := $posts.GroupByDate "2006 年 01 月" -}}
+    {{- if $groups }}
+      <div class="tax-list">
+        {{- range first 4 $groups }}
+        <a class="tax-row" href="{{ "archives/" | relURL }}">
+          <span>{{ .Key }}</span>
+          <span class="count mono">{{ len .Pages }} 篇</span>
+        </a>
+        {{- end }}
+      </div>
+      <div class="widget__divider" role="presentation"></div>
+      <a class="widget__link" href="{{ "archives/" | relURL }}"><span>完整归档</span>{{ partial "icon.html" "arrow-right" }}</a>
+    {{- else }}
+      <p class="mono">还没有文章</p>
+    {{- end }}
+  </section>
+
+</aside>

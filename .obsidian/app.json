@@ -1,0 +1,20 @@
+{
+  "promptDelete": false,
+  "attachmentFolderPath": "./",
+  "useMarkdownLinks": true,
+  "userIgnoreFilters": [
+    ".github/",
+    ".workbuddy/",
+    "archetypes/",
+    "assets/",
+    "data/",
+    "i18n/",
+    "layouts/",
+    "public/",
+    "resources/",
+    "static/",
+    "themes/"
+  ],
+  "newFileLocation": "folder",
+  "newFileFolderPath": "content/posts"
+}

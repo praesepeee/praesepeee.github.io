@@ -1,0 +1,39 @@
+{{- /* 把 front matter 里的图片字段解析成可用的 URL。支持两种用法：
+
+   1) 传字符串（站内根路径 / 外链）：
+        {{ partial "img-url.html" .Params.cover }}
+      - http(s):// 、 // 、 data: 原样返回
+      - 其它（如 cover.png，或 /images/a.jpg）走 relURL
+
+   2) 传 dict（额外支持 Page Bundle 内的相对路径）：
+        {{ partial "img-url.html" (dict "page" $p "src" $p.Params.cover) }}
+      - 先按「页面资源」解析（相对文章目录，如 cover.png 或 assets/cover.png）
+      - 解析不到再退回 relURL，保证写站内绝对路径也不会坏
+
+   传 map 当 src（如 cover = { image = "x.jpg" }）视为无效，返回空，避免模板报错。
+   无图时返回空字符串。 */ -}}
+{{- $isDict := reflect.IsMap . -}}
+{{- $page := "" -}}
+{{- $raw := . -}}
+{{- if $isDict -}}
+  {{- $page = .page | default "" -}}
+  {{- $raw = .src -}}
+{{- end -}}
+{{- if reflect.IsMap $raw }}{{ $raw = "" }}{{ end -}}
+{{- $s := printf "%v" $raw -}}
+{{- if eq $s "<nil>" }}{{ $s = "" }}{{ end -}}
+{{- $out := "" -}}
+{{- if $s -}}
+  {{- if or (hasPrefix $s "http") (hasPrefix $s "//") (hasPrefix $s "data:") -}}
+    {{- $out = $s -}}
+  {{- else if and $isDict $page (not (hasPrefix $s "/")) -}}
+    {{- with $page.Resources.GetMatch $s -}}
+      {{- $out = .RelPermalink -}}
+    {{- else -}}
+      {{- $out = $s | relURL -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $out = $s | relURL -}}
+  {{- end -}}
+{{- end -}}
+{{- $out -}}

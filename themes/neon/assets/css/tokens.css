@@ -1,0 +1,115 @@
+/* ==========================================================================
+   Neon Theme · 01 设计令牌 (Design Tokens)
+   速查：所有颜色 / 圆角 / 间距 / 字体只在这里定义一次，改主题只改这个文件。
+   ========================================================================== */
+
+:root {
+  /* ---------- 画布与表面 ---------- */
+  --bg:           #060a12;  /* 页面底色 */
+  --bg-nav:       #080c15;  /* 顶部导航 */
+  --bg-footer:    #05080f;  /* 页脚 */
+  --surface:      #0c1220;  /* 实心卡片（备用） */
+  --surface-sunk: #02050b;  /* 输入框内陷底 */
+
+  /* ---------- 玻璃拟态 ---------- */
+  --glass:        rgba(255, 255, 255, .045);  /* 卡片 */
+  --glass-soft:   rgba(255, 255, 255, .04);   /* 次级卡片 / 按钮 */
+  --glass-strong: rgba(255, 255, 255, .05);   /* 图标按钮 */
+  --glass-deep:   rgba(2, 7, 11, .7);         /* 覆盖在图片上的标签 */
+  --blur:         18px;                        /* 背景模糊半径 */
+
+  /* ---------- 描边 ---------- */
+  --stroke:       rgba(255, 255, 255, .09);
+  --stroke-soft:  rgba(255, 255, 255, .07);
+  --stroke-strong:rgba(255, 255, 255, .12);
+  --stroke-pop:   rgba(255, 255, 255, .16);
+  --stroke-accent:rgba(34, 211, 238, .40);
+  --stroke-accent-soft: rgba(34, 211, 238, .26);
+
+  /* ---------- 强调色（青蓝霓虹） ---------- */
+  --accent:        #22d3ee;
+  --accent-2:      #5b8cff;
+  --accent-3:      #6b4cff;      /* 紫色，仅用于封面渐变的第三段 */
+  --accent-text:   #7fe3f5;      /* 深底上的强调文字 */
+  --accent-ink:    #04121a;      /* 渐变按钮上的深色文字 */
+  --accent-glow:   rgba(34, 211, 238, .35);
+  --accent-wash:   rgba(34, 211, 238, .13);
+  --accent-wash-2: rgba(34, 211, 238, .10);
+  --grad-accent:      linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  --grad-accent-soft: linear-gradient(135deg, rgba(34, 211, 238, .13) 0%, rgba(91, 140, 255, .05) 100%);
+  --grad-divider:     linear-gradient(90deg, rgba(34, 211, 238, .55) 0%, rgba(91, 140, 255, .16) 45%, rgba(91, 140, 255, 0) 100%);
+  /* 封面 / 缩略图渐变（4 套，轮流使用） */
+  --grad-cover-a: linear-gradient(135deg, #0a455c 0%, #17296b 55%, #2b1a61 100%);
+  --grad-cover-b: linear-gradient(135deg, #0a3b4a 0%, #123a5a 100%);
+  --grad-cover-c: linear-gradient(135deg, #12304a 0%, #0e2a3f 100%);
+  --grad-cover-d: linear-gradient(135deg, #1a2b55 0%, #0b3b4a 100%);
+
+  /* ---------- 文字层级 ---------- */
+  --text:    #eaf2ff;  /* 主标题 */
+  --text-2:  #c9d5e6;  /* 次标题 / 作者名 */
+  --text-3:  #a9b6cc;  /* 正文 */
+  --text-4:  #93a4c0;  /* 副标题 / 摘要 */
+  --text-5:  #8b9ab4;  /* 列表摘要 / 页脚链接 */
+  --muted:   #5f6e88;  /* 元信息 */
+  --muted-2: #5a6478;  /* 版权 */
+  --muted-3: #4c5769;  /* 提示文字 */
+  --muted-4: #3f4a60;  /* 极弱 */
+  --link:    var(--accent-text);
+
+  /* ---------- 圆角 ---------- */
+  --r-xl:   24px;   /* 大封面 / 置顶卡 */
+  --r-card: 20px;   /* 侧边栏卡片 */
+  --r-lg:   18px;   /* 引用卡 / 插图 */
+  --r-md:   16px;   /* 缩略图 / 卡片 */
+  --r-sm:   12px;   /* 小按钮 / 输入框 */
+  --r-xs:   11px;   /* 图标按钮 */
+  --r-pill: 999px;
+
+  /* ---------- 间距节奏 ---------- */
+  --container: 1248px;  /* 桌面内容宽（1440 - 96*2） */
+  --gutter:    96px;    /* 桌面左右留白 */
+  --gutter-sm: 24px;    /* 移动左右留白 */
+  --nav-h:     72px;
+  --section-y: 72px;
+  --card-gap:  20px;
+  --grid-gap:  48px;    /* 主栏与侧栏间距 */
+
+  /* ---------- 字体 ---------- */
+  /* 中文优先走系统字体：零加载、渲染最稳，国内不会被墙 */
+  --font-sans: "Noto Sans SC", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei",
+               "Hiragino Sans GB", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Sora", var(--font-sans);
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas,
+               "Liberation Mono", Menlo, monospace;
+
+  --fs-hero:    58px;  --lh-hero:    76px;
+  --fs-h1:      46px;  --lh-h1:      68px;
+  --fs-title:   30px;  --lh-title:   46px;
+  --fs-h2:      26px;  --lh-h2:      40px;
+  --fs-h3:      22px;  --lh-h3:      34px;
+  --fs-lg:      18px;  --lh-lg:      36px;
+  --fs-body:    16px;  --lh-body:    36px;  /* 设计稿 16/36，中文长文透气 */
+  --fs-sm:      14px;  --lh-sm:      28px;
+  --fs-xs:      13px;  --lh-xs:      26px;
+  --fs-2xs:     12px;  --lh-2xs:     24px;
+  --fs-mono:    12px;
+  --fs-mono-s:  11px;
+  --fs-mono-xs: 10px;
+
+  /* ---------- 动效 ---------- */
+  --ease: cubic-bezier(.22, .61, .36, 1);
+  --dur:  .28s;
+  --dur-slow: .5s;
+
+  /* ---------- 装饰：网格线 & 光斑 ---------- */
+  --grid-line: rgba(46, 143, 168, .35);
+  --grid-size: 120px 130px;
+  --glow-cyan:   radial-gradient(closest-side, rgba(34, 211, 238, .45), rgba(34, 211, 238, 0) 68%);
+  --glow-blue:   radial-gradient(closest-side, rgba(91, 140, 255, .40), rgba(91, 140, 255, 0) 66%);
+  --glow-violet: radial-gradient(closest-side, rgba(107, 76, 255, .34), rgba(107, 76, 255, 0) 64%);
+
+  /* ---------- 阴影 ---------- */
+  --shadow-card: 0 24px 60px -20px rgba(0, 0, 0, .40);
+  --shadow-pop:  0 10px 30px -6px var(--accent-glow);
+  --shadow-glow: 0 0 8px var(--accent-glow);
+}

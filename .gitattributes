@@ -1,0 +1,30 @@
+# 跨平台行尾统一（Windows 电脑 / 手机 / CI 之间不要产生整文件 diff）
+* text=auto eol=lf
+
+# 二进制资源不做行尾转换
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.avif  binary
+*.ico   binary
+*.pdf   binary
+*.mp4   binary
+*.mov   binary
+*.mp3   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.zip   binary
+
+# 这些文件在 diff / 合并时按文本处理更直观
+*.md    text
+*.toml  text
+*.json  text
+*.yml   text
+*.yaml  text
+*.html  text
+*.css   text
+*.js    text

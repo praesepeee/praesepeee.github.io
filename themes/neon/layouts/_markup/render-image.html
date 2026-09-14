@@ -1,0 +1,59 @@
+{{- /* =========================================================================
+  Neon Theme · Markdown 媒体渲染钩子（Hugo render hook）
+
+  让**标准 Markdown 的 `![](文件名)`** 按后缀决定渲染成什么标签，
+  与 Obsidian 的 `![[文件名]]`（见 partials/post-content.html）行为完全一致：
+
+    ![](a.png)  →  <img loading="lazy">
+    ![](a.mp4)  →  <video controls playsinline> + 下载兜底链接
+    ![](a.mp3)  →  <audio controls>            + 下载兜底链接
+    ![](a.pdf)  →  <a class="file-embed">（下载 / 打开）
+
+  没有这个钩子之前，`![](a.mp4)` 会被 markdown 渲染器一律输出成
+  `<img src="a.mp4">`，视频无法播放、音频 / PDF 变成坏图。
+
+  ── 地址解析（关键）──────────────────────────────────────────────
+  优先在本页 bundle（文章目录）里按文件名找资源，命中就用它的 RelPermalink：
+    · 中文 / 带空格的文件名 → 由 Hugo 统一转义，不会拼出坏链接
+    · 附件放在子目录（如 attachments/）也能命中
+    · 文章被摘到首页 / 列表页时，相对地址不会再解析到站点根目录去
+  找不到（外链、static/ 下的全站文件）就原样沿用 .Destination。
+
+  ── 安全边界 ─────────────────────────────────────────────────────
+  **只**转换「视频 / 音频 / 常见文档」三类已知后缀，
+  其余（含无后缀、动态图片地址）仍按普通 `<img>` 处理，不会误改写成链接。
+  ========================================================================= */ -}}
+{{- $dest := .Destination -}}
+{{- $url := $dest -}}
+{{- $name := path.Base $dest -}}
+{{- $ext := lower (path.Ext $dest) -}}
+{{- $alt := .Text -}}
+
+{{- /* 在本页 bundle 里找同名资源：原名 → 纯文件名 → 任意子目录下的同名文件 */ -}}
+{{- $found := false -}}
+{{- with .Page -}}
+  {{- $page := . -}}
+  {{- range slice $dest $name (printf "**/%s" $name) -}}
+    {{- if not $found -}}
+      {{- with $page.Resources.GetMatch . -}}
+        {{- $url = .RelPermalink -}}
+        {{- $found = true -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $videos := slice ".mp4" ".m4v" ".mov" ".webm" ".ogv" ".mkv" ".avi" ".3gp" ".wmv" ".flv" -}}
+{{- $audios := slice ".mp3" ".wav" ".m4a" ".aac" ".ogg" ".oga" ".opus" ".flac" ".weba" -}}
+{{- $docs   := slice ".pdf" ".zip" ".rar" ".7z" ".doc" ".docx" ".xls" ".xlsx" ".ppt" ".pptx" ".md" ".csv" ".json" ".txt" -}}
+
+{{- if in $videos $ext -}}
+  {{- /* 不写 type 属性：让浏览器按内容嗅探，避免 .mkv / .mov 被类型提示挡掉 */ -}}
+  <video src="{{ $url | safeURL }}" controls playsinline preload="metadata"><a href="{{ $url | safeURL }}">当前浏览器无法播放该视频，点此下载</a></video>
+{{- else if in $audios $ext -}}
+  <audio src="{{ $url | safeURL }}" controls preload="metadata"><a href="{{ $url | safeURL }}">当前浏览器无法播放该音频，点此下载</a></audio>
+{{- else if in $docs $ext -}}
+  <a class="file-embed" href="{{ $url | safeURL }}" target="_blank" rel="noopener">{{ $alt | default $name }}</a>
+{{- else -}}
+  <img src="{{ $url | safeURL }}" alt="{{ $alt }}" loading="lazy" decoding="async">
+{{- end -}}

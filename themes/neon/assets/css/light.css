@@ -1,0 +1,87 @@
+/* ==========================================================================
+   Neon Theme · 04 浅色模式 (Light)
+   说明：设计稿只给了深色。这里按同一套结构推导出浅色版，
+   保持「青蓝霓虹」的识别度不变，只是把画布翻白。
+   不需要浅色模式时，删掉这个文件的引入即可（见 partials/head.html）。
+   ========================================================================== */
+
+:root[data-theme="light"] {
+  /* 画布与表面 */
+  --bg:           #f4f7fb;
+  --bg-nav:       #ffffff;
+  --bg-footer:    #eaeff7;
+  --surface:      #ffffff;
+  --surface-sunk: #0e1522;   /* 代码块保持深色，与深色主题一致 */
+
+  /* 玻璃（浅色下提高不透明度才看得见） */
+  --glass:        rgba(255, 255, 255, .72);
+  --glass-soft:   rgba(255, 255, 255, .66);
+  --glass-strong: rgba(255, 255, 255, .74);
+  --glass-deep:   rgba(255, 255, 255, .88);
+
+  /* 描边 */
+  --stroke:        rgba(11, 20, 36, .10);
+  --stroke-soft:   rgba(11, 20, 36, .07);
+  --stroke-strong: rgba(11, 20, 36, .14);
+  --stroke-pop:    rgba(11, 20, 36, .20);
+  --stroke-accent: rgba(8, 145, 178, .45);
+  --stroke-accent-soft: rgba(8, 145, 178, .30);
+
+  /* 强调色：白底上需要更深的青才能达到对比度 */
+  --accent:        #0891b2;
+  --accent-2:      #3b6fe0;
+  --accent-3:      #6b4cff;
+  --accent-text:   #0e7490;
+  --accent-ink:    #ffffff;
+  --accent-glow:   rgba(8, 145, 178, .26);
+  --accent-wash:   rgba(8, 145, 178, .12);
+  --accent-wash-2: rgba(8, 145, 178, .08);
+
+  /* 文字 */
+  --text:    #0b1424;
+  --text-2:  #1f2c42;
+  --text-3:  #33415a;
+  --text-4:  #4a5a75;
+  --text-5:  #5c6c86;
+  --muted:   #78889f;
+  --muted-2: #8896a9;
+  --muted-3: #9aa6b6;
+  --muted-4: #aeb8c6;
+
+  /* 阴影 */
+  --shadow-card: 0 20px 50px -24px rgba(11, 20, 36, .18);
+  --shadow-pop:  0 10px 26px -8px rgba(8, 145, 178, .35);
+  --shadow-glow: 0 0 8px rgba(8, 145, 178, .35);
+
+  /* 装饰 */
+  --grid-line: rgba(8, 145, 178, .55);
+  --grad-divider: linear-gradient(90deg, rgba(8, 145, 178, .55) 0%, rgba(59, 111, 224, .18) 45%, rgba(59, 111, 224, 0) 100%);
+}
+
+/* 浅色下压暗背景装饰，避免脏 */
+:root[data-theme="light"] body::before { opacity: .06; }
+:root[data-theme="light"] body::after {
+  background:
+    radial-gradient(46% 38% at 82% -6%, rgba(8, 145, 178, .18), transparent 62%),
+    radial-gradient(40% 34% at 4% 12%,  rgba(59, 111, 224, .14), transparent 62%);
+}
+:root[data-theme="light"] .deco__grid { opacity: .14; }
+
+/* 封面类深色区域上的标签必须保持深底浅字（封面渐变本身就深） */
+:root[data-theme="light"] .chip--on-cover {
+  background: rgba(2, 7, 11, .7);
+  border-color: rgba(255, 255, 255, .16);
+  color: #cfe9f5;
+}
+
+/* 代码块内保持深色底 + 浅色字 */
+:root[data-theme="light"] .prose pre code { color: #c9d5e6; }
+:root[data-theme="light"] .prose code {
+  background: rgba(8, 145, 178, .10);
+  color: var(--accent-text);
+}
+
+/* 页脚次级文字在浅底上要压深 */
+:root[data-theme="light"] .footer__desc,
+:root[data-theme="light"] .footer__col a { color: #55617a; }
+:root[data-theme="light"] .footer__col-title { color: #0e7490; }

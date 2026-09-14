@@ -1,0 +1,44 @@
+{{ define "main" }}
+{{- $posts := where site.RegularPages "Section" "posts" -}}
+{{- if eq (len $posts) 0 }}{{ $posts = site.RegularPages }}{{ end -}}
+{{- /* 与首页同一排序：按发布时间倒序（页面副标题写着「按年份倒序排列」） */ -}}
+{{- $posts = $posts.ByDate.Reverse -}}
+{{- $total := len $posts -}}
+
+<div class="wrap">
+  <div class="page-hero">
+    <span class="chip chip--eyebrow">
+      <span class="dot" role="presentation"></span>
+      归档
+    </span>
+    <h1 class="page-hero__title">{{ .Title }}</h1>
+    <p class="page-hero__sub">
+      {{ with .Content }}{{ . }}{{ else }}按年份倒序排列，共 {{ $total }} 篇。{{ end }}
+    </p>
+  </div>
+
+  <div style="padding-block:var(--section-y)">
+    {{- if $posts }}
+      {{- range ($posts.GroupByDate "2006").Reverse }}
+      <section class="archive-year reveal">
+        <div class="archive-year__head">
+          <span class="archive-year__num">{{ .Key }}</span>
+          <span class="mono">{{ len .Pages }} 篇</span>
+        </div>
+        {{- range .Pages.ByDate.Reverse }}
+        <a class="archive-row" href="{{ .RelPermalink }}">
+          <time class="mono" datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ .Date.Format "01.02 15:04" }}</time>
+          <span class="archive-row__title">{{ .Title }}</span>
+          <span class="archive-row__tags">
+            {{- with index .Params.categories 0 }}<span class="mono">{{ . }}</span>{{ end }}
+          </span>
+        </a>
+        {{- end }}
+      </section>
+      {{- end }}
+    {{- else }}
+    <p class="empty">还没有文章可归档。</p>
+    {{- end }}
+  </div>
+</div>
+{{ end }}

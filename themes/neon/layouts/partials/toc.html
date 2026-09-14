@@ -1,0 +1,9 @@
+{{- /* 本文目录。用法：{{ partial "toc.html" . }} —— 没有标题时自动不渲染 */ -}}
+{{- $hasHeadings := false -}}
+{{- with .Fragments }}{{ with .Headings }}{{ $hasHeadings = true }}{{ end }}{{ end -}}
+{{- if $hasHeadings }}
+<section class="widget card widget--sticky reveal">
+  <div class="widget__head">{{ partial "icon.html" "chevron-down" }}<span>本文目录</span></div>
+  <div class="toc__list">{{ .TableOfContents }}</div>
+</section>
+{{- end }}

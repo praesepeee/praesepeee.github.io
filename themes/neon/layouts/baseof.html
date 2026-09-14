@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="{{ site.Language.Locale | default "zh-cn" }}" data-theme="dark">
+<head>
+  {{- partial "head.html" . -}}
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  {{- partial "nav.html" . -}}
+
+  <main id="main">
+    {{- block "main" . }}{{ end -}}
+  </main>
+
+  {{- /* 页脚已按用户要求整体移除（partials/footer.html 保留未删，需要时加回本行即可）。 */ -}}
+
+  {{- partial "extend_footer.html" . -}}
+</body>
+</html>
