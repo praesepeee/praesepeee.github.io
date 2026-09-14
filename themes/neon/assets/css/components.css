@@ -432,6 +432,78 @@
 }
 .post-actions { display: flex; gap: 8px; }
 
+/* ---------- 复制链接成功提示 ----------
+   点一下「复制」按钮，从它正下方浮出一枚绿色小气泡（对钩 + 已复制链接）。
+   结构见 layouts/_default/single.html：.copywrap 包住按钮，.copytip 是气泡。
+   显隐由 assets/js/main.js 加/去 .is-show 控制。
+   气泡用「不透明底色 + 绿色薄罩」而不是纯半透明，否则小尖角会透出父级边框，出现接缝。 */
+.copywrap { position: relative; display: inline-flex; }
+
+.copytip {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px 7px 10px;
+  border-radius: var(--r-pill);
+  background-color: var(--bg-nav);
+  background-image: linear-gradient(var(--ok-wash), var(--ok-wash));
+  border: 1px solid var(--ok-stroke);
+  color: var(--ok-text);
+  font-size: var(--fs-2xs);
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 12px 26px -14px var(--ok-glow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -8px) scale(.94);
+  transform-origin: 50% 0;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease),
+              visibility 0s linear var(--dur);
+  pointer-events: none;
+}
+.copytip.is-show {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) scale(1);
+  transition-delay: 0s;
+}
+.copytip svg { width: 14px; height: 14px; color: var(--ok); flex-shrink: 0; }
+
+/* 小尖角，指回上面的按钮（旋转 45° 的正方形，压在气泡上边框上把它盖住） */
+.copytip::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 7px; height: 7px;
+  margin-left: -4px;
+  margin-bottom: -3px;
+  background-color: var(--bg-nav);
+  background-image: linear-gradient(var(--ok-wash), var(--ok-wash));
+  border-top: 1px solid var(--ok-stroke);
+  border-left: 1px solid var(--ok-stroke);
+  border-top-left-radius: 2px;
+  transform: rotate(45deg);
+}
+
+/* 按钮本身也切成绿色，跟气泡呼应 */
+.iconbtn.is-done {
+  color: var(--ok);
+  border-color: var(--ok-stroke);
+  background: var(--ok-wash);
+}
+
+/* 窄屏（≤960px 时左右留白只剩 24px）：气泡改右对齐，避免顶出屏幕右边被 body 的 overflow-x 裁掉 */
+@media (max-width: 960px) {
+  .copytip { left: auto; right: 0; transform: translate(0, -8px) scale(.94); }
+  .copytip.is-show { transform: translate(0, 0) scale(1); }
+  .copytip::before { left: auto; right: 14px; margin-left: 0; }
+}
+
 .breadcrumb { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .breadcrumb svg { width: 12px; height: 12px; color: var(--muted); }
 .breadcrumb a, .breadcrumb span { font-family: var(--font-mono); font-size: var(--fs-mono-s); letter-spacing: .06em; color: var(--muted); }

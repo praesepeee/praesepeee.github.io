@@ -51,12 +51,17 @@
           {{ .Date.Format "2006.01.02 15:04" }} · {{ .ReadingTime }} 分钟阅读 · {{ .WordCount }} 字
         </p>
 
+        {{- /* 文章头部按钮：按用户要求只保留「复制本文链接」。
+               「分享」和「订阅 RSS」两个按钮已删除（2026-09-14）—— 分享调系统面板在桌面端没反馈，
+               RSS 只是把 index.xml 打开，都不实用。
+               要恢复：从 git 历史取回下面两行即可（图标 share / rss 在 partials/icon.html 里都还在）。 */ -}}
         <div class="post-actions">
-          <button class="iconbtn iconbtn--mini" type="button" data-copy-link aria-label="复制本文链接">{{ partial "icon.html" "link" }}</button>
-          <button class="iconbtn iconbtn--mini" type="button" data-share aria-label="分享本文">{{ partial "icon.html" "share" }}</button>
-          {{- with site.Home.OutputFormats.Get "rss" }}
-          <a class="iconbtn iconbtn--mini" href="{{ .Permalink }}" aria-label="订阅 RSS">{{ partial "icon.html" "rss" }}</a>
-          {{- end }}
+          <span class="copywrap">
+            <button class="iconbtn iconbtn--mini" type="button" data-copy-link aria-label="复制本文链接">{{ partial "icon.html" "link" }}</button>
+            {{- /* 点击后从按钮下方浮出的绿色提示。文案写死在模板里，
+                   显隐由 assets/js/main.js 加 .is-show 控制（样式见 components.css）。 */ -}}
+            <span class="copytip" aria-hidden="true">{{ partial "icon.html" "check-circle" }}已复制链接</span>
+          </span>
         </div>
       </div>
     </header>

@@ -119,47 +119,47 @@
     pre.appendChild(btn);
   });
 
-  /* -------------------------------------------------- 复制链接 / 分享 */
+  /* -------------------------------------------------------- 复制本文链接 */
+  /* 说明：原先还有一段 [data-share]「分享」逻辑，随文章头部分享按钮一起删除（2026-09-14）。
+     copyText() 保留 —— [data-copy-link] 仍在使用。 */
   function copyText(text, onDone) {
+    var fallback = function () {
+      var ta = doc.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      doc.body.appendChild(ta);
+      ta.select();
+      try { doc.execCommand('copy'); onDone(); } catch (e) {}
+      doc.body.removeChild(ta);
+    };
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(onDone, function () {});
+      // 新版接口被拒（权限 / 非 HTTPS 等）时退回老办法，别让提示不出现
+      navigator.clipboard.writeText(text).then(onDone, fallback);
       return;
     }
-    var ta = doc.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    doc.body.appendChild(ta);
-    ta.select();
-    try { doc.execCommand('copy'); onDone(); } catch (e) {}
-    doc.body.removeChild(ta);
+    fallback();
   }
 
   doc.querySelectorAll('[data-copy-link]').forEach(function (btn) {
+    var tip = btn.parentElement && btn.parentElement.querySelector('.copytip');
+    var timer = null;
+    var HOLD = 1800;
     btn.addEventListener('click', function () {
       copyText(location.href, function () {
         var old = btn.getAttribute('aria-label');
-        btn.setAttribute('aria-label', '已复制');
-        btn.style.color = 'var(--accent-text)';
+        btn.setAttribute('aria-label', '已复制链接');
+        btn.classList.add('is-done');
+        if (tip) {
+          tip.classList.add('is-show');
+          clearTimeout(timer);
+          timer = setTimeout(function () { tip.classList.remove('is-show'); }, HOLD);
+        }
         setTimeout(function () {
           btn.setAttribute('aria-label', old || '复制本文链接');
-          btn.style.color = '';
-        }, 1600);
+          btn.classList.remove('is-done');
+        }, HOLD);
       });
-    });
-  });
-
-  doc.querySelectorAll('[data-share]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var data = { title: doc.title, url: location.href };
-      if (navigator.share) {
-        navigator.share(data).catch(function () {});
-      } else {
-        copyText(location.href, function () {
-          btn.style.color = 'var(--accent-text)';
-          setTimeout(function () { btn.style.color = ''; }, 1600);
-        });
-      }
     });
   });
 

@@ -48,6 +48,13 @@
   --muted-3: #9aa6b6;
   --muted-4: #aeb8c6;
 
+  /* 成功态：白底上要用更深的绿才够对比度 */
+  --ok:        #059669;
+  --ok-text:   #047857;
+  --ok-wash:   rgba(5, 150, 105, .10);
+  --ok-stroke: rgba(5, 150, 105, .32);
+  --ok-glow:   rgba(5, 150, 105, .22);
+
   /* 阴影 */
   --shadow-card: 0 20px 50px -24px rgba(11, 20, 36, .18);
   --shadow-pop:  0 10px 26px -8px rgba(8, 145, 178, .35);

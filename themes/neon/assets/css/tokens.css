@@ -38,6 +38,13 @@
   --grad-accent:      linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
   --grad-accent-soft: linear-gradient(135deg, rgba(34, 211, 238, .13) 0%, rgba(91, 140, 255, .05) 100%);
   --grad-divider:     linear-gradient(90deg, rgba(34, 211, 238, .55) 0%, rgba(91, 140, 255, .16) 45%, rgba(91, 140, 255, 0) 100%);
+
+  /* ---------- 成功态（复制成功之类的轻提示） ---------- */
+  --ok:        #34d399;  /* 对钩图标 */
+  --ok-text:   #6ee7b7;  /* 提示文字 */
+  --ok-wash:   rgba(52, 211, 153, .14);
+  --ok-stroke: rgba(52, 211, 153, .38);
+  --ok-glow:   rgba(52, 211, 153, .30);
   /* 封面 / 缩略图渐变（4 套，轮流使用） */
   --grad-cover-a: linear-gradient(135deg, #0a455c 0%, #17296b 55%, #2b1a61 100%);
   --grad-cover-b: linear-gradient(135deg, #0a3b4a 0%, #123a5a 100%);
