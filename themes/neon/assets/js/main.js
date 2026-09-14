@@ -19,37 +19,51 @@
   var DBG = doc.createElement('div');
   DBG.id = 'neon-dbg';
   DBG.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;' +
-    'background:rgba(0,0,0,.9);color:#7CFFB2;font:11px/1.45 monospace;' +
-    'padding:6px 8px;white-space:pre-wrap;word-break:break-all;pointer-events:none';
+    'background:rgba(0,0,0,.92);color:#7CFFB2;font:10px/1.35 monospace;' +
+    'padding:4px 6px;white-space:pre-wrap;word-break:break-all;pointer-events:none';
   var DBG_LINES = [];
   function dbg(s) {
     DBG_LINES.push(s);
-    while (DBG_LINES.length > 7) DBG_LINES.shift();
+    while (DBG_LINES.length > 12) DBG_LINES.shift();
     DBG.textContent = DBG_LINES.join('\n');
   }
   function dbgMount() { if (doc.body && !DBG.parentNode) doc.body.appendChild(DBG); }
   dbgMount();
   doc.addEventListener('DOMContentLoaded', dbgMount);
 
-  dbg('UA ' + (navigator.userAgent || '').slice(0, 78));
-  dbg('M=' + isMobile()
-      + ' share=' + (typeof navigator.share)
-      + ' clip=' + (!!navigator.clipboard)
+  function tag(el) {
+    if (!el) return 'null';
+    var c = '';
+    try { c = (el.getAttribute('class') || '').split(' ')[0]; } catch (e) {}
+    return el.tagName + (c ? '.' + c : '');
+  }
+  function rr(el) {
+    if (!el) return 'none';
+    var r = el.getBoundingClientRect();
+    return Math.round(r.left) + ',' + Math.round(r.top) + ' ' +
+           Math.round(r.width) + 'x' + Math.round(r.height);
+  }
+  function efp(x, y) {
+    try { return tag(doc.elementFromPoint(x, y)); } catch (e) { return 'ERR'; }
+  }
+  function cs(el, p) {
+    try { return window.getComputedStyle(el)[p]; } catch (e) { return 'ERR'; }
+  }
+
+  dbg('M=' + isMobile() + ' share=' + (typeof navigator.share)
       + ' wt=' + (navigator.clipboard ? typeof navigator.clipboard.writeText : 'none')
-      + ' sec=' + window.isSecureContext);
-  dbg('W=' + window.innerWidth + ' dpr=' + window.devicePixelRatio);
+      + ' sec=' + window.isSecureContext + ' W=' + window.innerWidth);
+  dbg('UA ' + (navigator.userAgent || '').slice(0, 96));
 
   doc.addEventListener('click', function (e) {
-    var t = e.target;
-    var cls = '';
-    try { cls = (t.getAttribute('class') || '').split(' ')[0]; } catch (err) { cls = '?'; }
-    var near = '';
+    var t = e.target, near = '';
     try {
-      if (t.closest && t.closest('[data-share-copy]')) near = 'SHARE-ITEM';
-      else if (t.closest && t.closest('[data-share]')) near = 'SHARE-BTN';
-      else if (t.closest && t.closest('[data-copy-link]')) near = 'COPY-BTN';
-    } catch (err) { near = 'CLOSEST-ERR'; }
-    dbg('CLICK <' + t.tagName + '> .' + cls + ' ' + near);
+      if (t.closest && t.closest('[data-share-copy]')) near = 'ITEM';
+      else if (t.closest && t.closest('[data-share]')) near = 'SBTN';
+      else if (t.closest && t.closest('[data-copy-link]')) near = 'CBTN';
+    } catch (err) {}
+    dbg('CLK ' + tag(t) + ' ' + near + ' @' + Math.round(e.clientX) + ',' + Math.round(e.clientY)
+        + ' efp=' + efp(e.clientX, e.clientY));
   }, true);
   /* ============================================================ */
 
@@ -245,19 +259,13 @@
     if (tip) {
       tip.classList.add('is-show');
       placePop(tip, btn);
-      var cs = window.getComputedStyle(tip);
-      var r = tip.getBoundingClientRect();
-      dbg('  FLASH show=' + tip.classList.contains('is-show')
-          + ' op=' + cs.opacity + ' vis=' + cs.visibility
-          + ' disp=' + cs.display + ' z=' + cs.zIndex);
-      dbg('  box=' + tip.offsetWidth + 'x' + tip.offsetHeight
-          + ' rect=' + Math.round(r.left) + ',' + Math.round(r.top)
-          + ' shift=' + tip.style.getPropertyValue('--pop-shift')
-          + ' arrow=' + tip.style.getPropertyValue('--pop-arrow'));
+      var tcs = window.getComputedStyle(tip);
+      dbg('FLASH op=' + tcs.opacity + ' vis=' + tcs.visibility + ' z=' + tcs.zIndex);
+      dbg('  tip=' + rr(tip) + ' sh=' + tip.style.getPropertyValue('--pop-shift'));
       clearTimeout(btn._tipTimer);
       btn._tipTimer = setTimeout(function () { tip.classList.remove('is-show'); }, HOLD);
     } else {
-      dbg('  FLASH tip=NULL  (wrap=' + (wrap ? wrap.className : 'null') + ')');
+      dbg('FLASH tip=NULL wrap=' + tag(wrap));
     }
     clearTimeout(btn._doneTimer);
     btn._doneTimer = setTimeout(function () {
@@ -269,7 +277,7 @@
   doc.querySelectorAll('[data-copy-link]').forEach(function (btn) {
     var baseLabel = btn.getAttribute('aria-label') || '复制本文链接';
     btn.addEventListener('click', function () {
-      dbg('> COPY-BTN handler');
+      dbg('CBTN-H');
       copyText(location.href);
       flashDone(btn, baseLabel);   // 反馈同步出现，不等复制结果
     });
@@ -293,7 +301,7 @@
 
     btn.addEventListener('click', function (e) {
       e.stopPropagation();   // 别让下面「点别处收起」那个监听当场把它关掉
-      dbg('> SHARE-BTN handler  share=' + (typeof navigator.share) + ' menu=' + (!!menu));
+      dbg('SBTN-H menu=' + (!!menu));
 
       // 手机：系统分享面板（微信 / QQ / Telegram / 复制链接都在里面），
       // 面板本身就是反馈，不再弹气泡；用户取消会 reject，忽略即可。
@@ -316,6 +324,15 @@
         menu.classList.add('is-open');
         btn.setAttribute('aria-expanded', 'true');
         placePop(menu, btn);
+
+        // 探针：菜单的真实坐标、包含块、以及该坐标上最顶层的元素是谁
+        var mr = menu.getBoundingClientRect();
+        dbg('wrap.pos=' + cs(wrap, 'position') + ' m.pos=' + cs(menu, 'position')
+            + ' OP=' + tag(menu.offsetParent));
+        dbg('m=' + rr(menu) + ' i=' + rr(item) + ' vis=' + cs(menu, 'visibility'));
+        var mx = Math.round(mr.left + mr.width / 2);
+        var my = Math.round(mr.top + mr.height / 2);
+        dbg('efp(' + mx + ',' + my + ')=' + efp(mx, my));
       }
     });
 
@@ -325,7 +342,7 @@
     var item = menu.querySelector('[data-share-copy]');
     if (item) {
       item.addEventListener('click', function (e) {
-        dbg('> SHARE-ITEM handler');
+        dbg('ITEM-H');
         e.stopPropagation();
         closeMenu(true);
         copyText(location.href);
