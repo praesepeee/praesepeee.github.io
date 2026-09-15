@@ -2,16 +2,41 @@
    Neon Theme · 留言区
    未配置评论系统时不渲染假表单，只给一张说明卡 —— 避免用户以为能提交却没有后端。
    在 hugo.toml 里配 giscus 或 utterances 即可启用：
+
      [params.comments]
-       provider    = "giscus"
-       repo        = "owner/repo"
-       repoId      = "R_xxxx"
-       category    = "Announcements"
-       categoryId  = "DIC_xxxx"
+       provider   = "giscus"                  # 或 "utterances"
+       repo       = "owner/repo"
+       repoId     = "R_xxxx"                  # giscus 必填
+       category   = "Announcements"
+       categoryId = "DIC_xxxx"                # giscus 必填
+       mapping    = "pathname"                # 文章 ↔ 讨论的对应方式
+       strict     = false
+       reactionsEnabled = true
+       emitMetadata     = false
+       inputPosition    = "bottom"
+       lang       = "zh-CN"
+       loading    = "lazy"
+       syncTheme  = true                      # 评论区跟随站点深/浅切换
+       themeDark  = "dark_dimmed"
+       themeLight = "light"
+       theme      = "preferred_color_scheme"  # 仅 syncTheme = false 时生效
+
+   ── 为什么 giscus 不用官方那段静态 <script> ──
+   giscus 只在 client.js 执行的那一刻读一次 data-theme，而本站的深浅色存在
+   localStorage 里、由 <head> 里的内联脚本在渲染前打到 <html data-theme> 上，
+   Hugo 构建时根本不知道访客用的是哪套。直接写死 data-theme 的结果是：
+   浅色模式的访客会先看到一个深色评论区，等 JS 纠正过来才变白，很割裂。
+
+   所以这里改成：用一段内联脚本读当前 <html data-theme>，再造出 giscus 的
+   <script> 标签，这样它第一次加载就是对的颜色，没有闪烁。
+   （data-loading="lazy" 仍然有效 —— 延迟加载是 client.js 自己实现的。）
+
+   之后用户点右上角切换深浅色时，main.js 会通过 postMessage 通知 iframe 换肤，
+   见 assets/js/main.js 里「评论区主题跟随」一节。
    ========================================================================= */ -}}
 {{- $c := site.Params.comments -}}
 
-<section class="wrap" id="comments" style="padding-bottom:80px">
+<section class="wrap comments" id="comments">
   <div class="sec-head">
     <span class="sec-head__label">
       <span class="sec-head__bar" role="presentation"></span>
@@ -20,28 +45,76 @@
   </div>
 
   {{- if and $c (eq $c.provider "giscus") $c.repo $c.repoId }}
-    <script src="https://giscus.app/client.js"
-            data-repo="{{ $c.repo }}"
-            data-repo-id="{{ $c.repoId }}"
-            data-category="{{ $c.category | default "Announcements" }}"
-            data-category-id="{{ $c.categoryId }}"
-            data-mapping="{{ $c.mapping | default "pathname" }}"
-            data-strict="0"
-            data-reactions-enabled="1"
-            data-emit-metadata="0"
-            data-input-position="top"
-            data-theme="dark_dimmed"
-            data-lang="zh-CN"
-            data-loading="lazy"
-            crossorigin="anonymous"
-            async></script>
+    {{- $dark := $c.themeDark | default "dark_dimmed" -}}
+    {{- $light := $c.themeLight | default "light" -}}
+    {{- /* 布尔开关：giscus 只认字符串，统一转成 '1' / '0'。
+           这两个坑都踩过，别再改回去：
+             1) 不能用 `$c.x | default true` —— Hugo 的 default 把 false 也当空值，
+                配了 false 依然得到 true，等于开关失灵。
+             2) 也不能用 `isset $c "reactionsEnabled"` —— Hugo 会把 params 的键名
+                转成小写，而 isset 大小写敏感，camelCase 的键永远查不到。
+           所以改成跟 nil 比：没配（nil）→ 用默认值；配了 → 照配的来。 */ -}}
+    {{- $reactions := "1" -}}
+    {{- if ne $c.reactionsEnabled nil }}{{ $reactions = cond $c.reactionsEnabled "1" "0" }}{{ end -}}
+    {{- $sync := true -}}
+    {{- if ne $c.syncTheme nil }}{{ $sync = $c.syncTheme }}{{ end -}}
+    {{- $strict := cond ($c.strict | default false) "1" "0" -}}
+    {{- $emit := cond ($c.emitMetadata | default false) "1" "0" -}}
+    {{- /* data-theme 在浏览器里现算（见上方说明），先不放进来 */ -}}
+    {{- $cfg := dict
+        "data-repo"              $c.repo
+        "data-repo-id"           $c.repoId
+        "data-category"          ($c.category | default "Announcements")
+        "data-category-id"       $c.categoryId
+        "data-mapping"           ($c.mapping | default "pathname")
+        "data-strict"            $strict
+        "data-reactions-enabled" $reactions
+        "data-emit-metadata"     $emit
+        "data-input-position"    ($c.inputPosition | default "bottom")
+        "data-lang"              ($c.lang | default "zh-CN")
+        "data-loading"           ($c.loading | default "lazy")
+    -}}
+
+    <div class="giscus" id="giscus-thread"
+         data-theme-dark="{{ $dark }}"
+         data-theme-light="{{ $light }}"></div>
+
+    <script>
+      (function () {
+        var box = document.getElementById('giscus-thread');
+        if (!box) return;
+
+        /* jsonify 出来的是 JSON 文本，直接插进 <script> 会被 html/template
+           当成字符串再转义一遍（变成 var cfg = "{...}"），必须用 safeJS 声明
+           「这段是 JS 代码，别动」。 */
+        var cfg = {{ $cfg | jsonify | safeJS }};
+        /* $sync 为真 → 按 <html data-theme> 现算；为假 → 固定用配置里那个 */
+        cfg['data-theme'] = {{ if $sync -}}
+          (document.documentElement.getAttribute('data-theme') === 'light'
+            ? box.getAttribute('data-theme-light')
+            : box.getAttribute('data-theme-dark'))
+        {{- else -}}
+          {{ $c.theme | default "preferred_color_scheme" | jsonify | safeJS }}
+        {{- end }};
+
+        var s = document.createElement('script');
+        s.src = 'https://giscus.app/client.js';
+        s.async = true;
+        s.crossOrigin = 'anonymous';
+        for (var k in cfg) {
+          if (Object.prototype.hasOwnProperty.call(cfg, k)) s.setAttribute(k, cfg[k]);
+        }
+        box.appendChild(s);
+      })();
+    </script>
 
   {{- else if and $c (eq $c.provider "utterances") $c.repo }}
+    <div class="giscus"></div>
     <script src="https://utteranc.es/client.js"
             repo="{{ $c.repo }}"
             issue-term="{{ $c.issueTerm | default "pathname" }}"
             label="{{ $c.label | default "comment" }}"
-            theme="github-dark"
+            theme="{{ $c.themeDark | default "github-dark" }}"
             crossorigin="anonymous"
             async></script>
 

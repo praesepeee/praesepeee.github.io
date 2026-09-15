@@ -830,42 +830,25 @@
 .pager__next svg { width: 15px; height: 15px; }
 .pager__next:hover { color: var(--accent-text); border-color: var(--stroke-accent); }
 
-/* ------------------------------ 留言 ------------------------------ */
-.comment-form { padding: 22px; }
-.comment-form__input {
-  width: 100%;
-  min-height: 84px;
-  padding: 14px;
-  border-radius: var(--r-sm);
-  background: var(--glass-deep);
-  border: 1px solid var(--stroke-dim, rgba(255, 255, 255, .1));
-  color: var(--text-2);
-  font-size: var(--fs-sm);
-  line-height: 1.8;
-  resize: vertical;
-  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+/* ------------------------------ 留言（giscus） ------------------------------ */
+/* 评论区是 giscus 的跨域 iframe，里面长什么样由它自己的主题决定（见
+   partials/comments.html 与 js/main.js 的换肤逻辑），这边只管外面这层容器。 */
+.comments { padding-bottom: 80px; }
+.giscus { margin-top: 4px; }
+.giscus-frame { width: 100%; border: 0; }
+
+/* iframe 出现之前（含 data-loading="lazy" 还没滚到的阶段）占个位，
+   免得用户滚到这儿时下方内容被突然撑开的评论区顶一下。 */
+.giscus:empty::before {
+  content: '评论区加载中…';
+  display: block;
+  padding: 30px 16px;
+  border: 1px dashed var(--stroke);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  text-align: center;
 }
-.comment-form__input::placeholder { color: var(--muted); }
-.comment-form__input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-wash-2);
-}
-.comment-form__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 18px;
-  flex-wrap: wrap;
-}
-.comment-list { display: flex; flex-direction: column; gap: 24px; margin-top: 24px; }
-.comment { display: flex; gap: 14px; align-items: flex-start; }
-.comment__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.comment__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.comment__name { font-size: var(--fs-xs); font-weight: 500; color: var(--text); }
-.comment__time { font-family: var(--font-mono); font-size: var(--fs-mono-s); color: var(--muted); }
-.comment__text { font-size: var(--fs-sm); line-height: 1.93; color: var(--text-3); }
 
 /* ------------------------------ 归档 / 标签 聚合页 ------------------------------ */
 .archive-year { margin-top: 44px; }
@@ -968,7 +951,8 @@
   .post-cover { height: 220px; padding: 20px; }
   .widget { padding: 20px; }
   .footer__cols { gap: 28px 36px; }
-  .comment__text, .prose { font-size: var(--fs-body); }
+  .prose { font-size: var(--fs-body); }
+  .comments { padding-bottom: 56px; }
 }
 
 /* ==========================================================================

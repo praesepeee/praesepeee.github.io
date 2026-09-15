@@ -95,13 +95,36 @@ theme = "neon"
   # 「关于我」页面与栏目已整体移除（含 heroTitle / 个人故事 / 现在在做 / 联系方式），
   # 对应的 content/about.md 与 layouts/_default/about.html 也已删除。
 
-  # 评论：留空则显示一张「如何接入」的说明卡，不会出现假的输入框
-  # [params.comments]
-  #   provider = 'giscus'
-  #   repo = 'praesepeee/praesepeee.github.io'
-  #   repoId = 'R_xxxxxx'
-  #   category = 'Announcements'
-  #   categoryId = 'DIC_xxxxxx'
+  # ------------------------------------------------------------ 评论（giscus）
+  # 基于 GitHub Discussions，评论数据存在仓库的 Announcements 分类里。
+  # 整段删掉 / 注释掉，文章页底部会退回一张「还没接入评论系统」的说明卡。
+  # 配置项说明见 themes/neon/layouts/partials/comments.html 顶部注释。
+  [params.comments]
+    provider   = 'giscus'
+    repo       = 'praesepeee/praesepeee.github.io'
+    repoId     = 'R_kgDOUY-4iw'
+    category   = 'Announcements'
+    categoryId = 'DIC_kwDOUY-4i84DFoI6'
+
+    # 文章 ↔ Discussion 的对应方式：pathname（按路径）最稳，改标题也不会丢评论
+    mapping    = 'pathname'
+    # true 时只有标题也完全一致才匹配到已有讨论，容易开出一堆重复的 Discussion，所以关掉
+    strict     = false
+    # 评论区显示 👍 之类的表情回应
+    reactionsEnabled = true
+    # 是否把 Discussion 的描述塞进页面 <meta>（不需要）
+    emitMetadata     = false
+    # 输入框在评论列表上方还是下方
+    inputPosition    = 'bottom'
+    lang       = 'zh-CN'
+    loading    = 'lazy'
+
+    # 评论区配色跟随右上角的深/浅切换（脚本在 assets/js/main.js 里）
+    # 关掉的话固定用下面的 theme
+    syncTheme  = true
+    themeDark  = 'dark_dimmed'
+    themeLight = 'light'
+    theme      = 'preferred_color_scheme'   # 仅 syncTheme = false 时生效
 
   # ↓↓↓ 以下为 PaperMod 参数，切回 PaperMod 时仍然生效 ↓↓↓
   ShowReadingTime = true

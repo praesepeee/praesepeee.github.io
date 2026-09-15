@@ -136,6 +136,8 @@ git push
 | `fonts.useCDN` | 是否加载 Sora + JetBrains Mono | `false` |
 | `search.enable` | 是否显示搜索图标 | `false` |
 | `comments.provider` | `giscus` 或 `utterances` | 空 |
+| `comments.syncTheme` / `themeDark` / `themeLight` / `theme` | 评论区配色是否跟随站点深/浅切换，以及两套主题名 | `true` / `dark_dimmed` / `light` / `preferred_color_scheme` |
+| `comments.mapping` / `strict` / `reactionsEnabled` / `emitMetadata` / `inputPosition` / `lang` / `loading` | giscus 的其余属性 | 见「开启评论」一节 |
 | `subscribeAction` / `subscribeLabel` / `subscribeTitle` / `subscribeDesc` | 订阅功能参数；**当前站点的所有入口已移除，填了也不会显示** | — |
 | `footer.description` / `footer.columns` / `footerNote` | 页脚参数；**当前站点页脚整体未渲染** | — |
 
@@ -438,6 +440,38 @@ Chrome / Edge / Firefox 桌面端在 Windows 上解不了 —— 表现就是页
 ```
 
 换成 `provider = 'utterances'` + `repo` 则用 Issues 承载评论。
+
+**可选参数**（都有默认值，不写就是下面这样）：
+
+```toml
+  mapping    = 'pathname'   # 文章 ↔ Discussion 的对应方式，pathname 最稳（改标题不丢评论）
+  strict     = false        # true 时标题也要完全一致才匹配，容易开出一堆重复 Discussion
+  reactionsEnabled = true   # 显示 👍 之类的表情回应
+  emitMetadata     = false  # 把 Discussion 描述塞进 <meta>
+  inputPosition    = 'bottom'
+  lang       = 'zh-CN'
+  loading    = 'lazy'
+  syncTheme  = true         # 评论区跟随站点右上角的深/浅切换
+  themeDark  = 'dark_dimmed'   # syncTheme = true 时，深色用哪套
+  themeLight = 'light'         # 浅色用哪套
+  theme      = 'preferred_color_scheme'   # 仅 syncTheme = false 时生效
+```
+
+#### 评论区为什么不用 giscus 官方那段静态 `<script>`
+
+官方片段里 `data-theme` 是写死的，而 giscus **只在 client.js 执行的那一刻读一次**。
+本站的深浅色存在 `localStorage`、由 `<head>` 里的内联脚本在渲染前打到
+`<html data-theme>` 上，Hugo 构建时不知道访客用的是哪套 —— 写死的结果就是
+浅色访客先看到一个深色评论区，等 JS 纠正过来才变白。
+
+所以 `partials/comments.html` 改成：内联脚本读当前 `<html data-theme>`，
+再造出 giscus 的 `<script>` 标签，第一次加载就是对的颜色。
+之后点右上角切换深浅色时，`assets/js/main.js` 里的 `giscusTheme()` 会
+`postMessage` 通知 iframe 换肤（跨域 iframe 只能这么改）。
+
+模板里那段内联 JS 有个坑：`jsonify` 的结果插进 `<script>` 必须再套 `safeJS`，
+否则 html/template 会把它当字符串再转义一遍，输出 `var cfg = "{...}"` ——
+语法上合法，但 `for...in` 会去遍历字符串下标，属性全设错。
 
 ### 开启订阅（当前站点已关闭）
 

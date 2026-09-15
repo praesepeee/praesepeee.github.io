@@ -34,6 +34,7 @@
         moon.hidden = theme === 'light';
       }
     });
+    giscusTheme();   // 评论区跟着换肤（没装 giscus 时是空操作）
   }
 
   doc.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
@@ -42,6 +43,47 @@
     });
   });
   setTheme(currentTheme());
+
+  /* ------------------------------------------------------ 评论区主题跟随 */
+  /* giscus 的评论区是跨域 iframe，自带一套皮肤，光改本站 CSS 动不了它，
+     只能在切换时用 postMessage 通知里面的应用换主题。
+
+     首次加载不需要在这里管：模板 partials/comments.html 是读着
+     <html data-theme> 现造 <script> 标签的，一开始就是对的颜色。
+     这里只负责两件事：
+       1) 用户点右上角按钮 → 上面的 setTheme() 会调 giscusTheme()
+       2) iframe 出现得比切换晚（giscus 是懒加载，要滚到评论区才建 iframe）
+          → 盯住容器，等 iframe 建好、加载完了再补一次
+
+     主题名从容器上的 data-theme-dark / data-theme-light 读，由模板渲染，
+     改配色不用动这个文件。 */
+  function giscusTheme() {
+    var box = doc.querySelector('.giscus[data-theme-dark]');
+    var frame = doc.querySelector('iframe.giscus-frame');
+    if (!box || !frame || !frame.contentWindow) return;
+    frame.contentWindow.postMessage({
+      giscus: {
+        setConfig: {
+          theme: currentTheme() === 'light'
+            ? box.getAttribute('data-theme-light')
+            : box.getAttribute('data-theme-dark')
+        }
+      }
+    }, 'https://giscus.app');
+  }
+
+  var giscusBox = doc.querySelector('.giscus[data-theme-dark]');
+  if (giscusBox && 'MutationObserver' in window) {
+    var giscusBound = null;
+    /* 刻意不在监听到 iframe 的那一刻就 postMessage：那时里面还没初始化完，
+       消息会被丢掉。只挂 load，等它真的加载完再校一次。 */
+    new MutationObserver(function () {
+      var frame = giscusBox.querySelector('iframe.giscus-frame');
+      if (!frame || frame === giscusBound) return;
+      giscusBound = frame;
+      frame.addEventListener('load', giscusTheme);
+    }).observe(giscusBox, { childList: true });
+  }
 
   /* ------------------------------------------------------------ 移动菜单 */
   var burger = doc.querySelector('[data-menu-toggle]');
