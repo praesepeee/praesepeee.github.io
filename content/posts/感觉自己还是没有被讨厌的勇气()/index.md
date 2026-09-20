@@ -3,7 +3,7 @@ date = 2026-09-20T11:24:03+08:00
 draft = false
 title = '感觉自己还是没有被讨厌的勇气()'
 description = '(｡í ˰ ì｡)'
-cover = 'cover.gif'            # 封面图放在本文章目录里，写文件名即可
+cover = 'cover.jpg'            # 封面图放在本文章目录里，写文件名即可
 # categories = ['分类名']           # 可选，写了会自动生成分类页
 # tags = ['标签一', '标签二']        # 可选
 +++
